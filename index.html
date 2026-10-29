@@ -2,1103 +2,171 @@
 <html lang="pt-BR" class="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lista de Compras & Estoque</title>
-
-  <!-- Tailwind CSS CDN com Fallback CSS Inline puro para garantia absoluta de carregamento -->
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <style>
-    /* CSS BASE AUTÔNOMO */
-    :root {
-      --bg-main: #0f172a;
-      --bg-card: #1e293b;
-      --bg-input: #0f172a;
-      --border: #334155;
-      --accent: #10b981;
-      --accent-hover: #059669;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: { 500: '#10b981', 600: '#059669', 700: '#047857' }
+          }
+        }
+      }
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    body {
-      background-color: var(--bg-main);
-      color: var(--text-main);
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      min-height: 100vh;
-      padding-bottom: 90px;
-      user-select: none;
-    }
-    input, select, button, textarea { font-family: inherit; user-select: text; }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    
-    .badge { padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
-    .badge-extra { background-color: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
-    .badge-mandatory { background-color: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
-  </style>
+  </script>
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen pb-28 antialiased">
+<body class="bg-slate-900 text-slate-100 min-h-screen pb-24 font-sans select-none">
 
-  <!-- CABEÇALHO -->
-  <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-30 px-4 py-3 shadow-lg">
+  <!-- Cabeçalho -->
+  <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-40 p-4 shadow-lg">
     <div class="max-w-md mx-auto flex items-center justify-between">
       <div class="flex items-center space-x-2">
-        <div class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-lg border border-emerald-500/30">
-          🛒
-        </div>
-        <div>
-          <h1 class="font-bold text-base text-slate-100 leading-tight">MercadoSmart</h1>
-          <p class="text-[11px] text-emerald-400 font-mono" id="room-display">Local</p>
-        </div>
+        <i data-lucide="shopping-bag" class="w-6 h-6 text-emerald-400"></i>
+        <h1 class="text-lg font-bold bg-gradient-to-r from-emerald-400 to-teal-200 bg-clip-text text-transparent">Minhas Compras</h1>
       </div>
-
-      <div class="flex items-center space-x-2">
-        <button onclick="openShareModal()" class="p-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600 text-xs font-semibold flex items-center gap-1 transition">
-          🔗 <span class="hidden sm:inline">Link</span>
-        </button>
-        <button onclick="promptUserName()" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-700 border border-slate-600 text-xs font-medium text-slate-100">
-          <span class="w-5 h-5 rounded-full bg-emerald-600 flex items-center justify-center font-bold text-[10px] text-white" id="user-avatar">?</span>
-          <span id="user-name-txt" class="truncate max-w-[70px]">Usuário</span>
+      <div class="flex items-center gap-2">
+        <button onclick="abrirModalUsuario()" id="btn-usuario" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-lg text-emerald-300 text-xs flex items-center gap-1 font-medium transition">
+          <i data-lucide="user" class="w-3.5 h-3.5"></i> <span id="lbl-usuario">Convidado</span>
         </button>
       </div>
     </div>
   </header>
 
-  <!-- CONTEÚDO PRINCIPAL (MOBILE FIRST) -->
-  <main class="max-w-md w-full mx-auto p-4 space-y-4">
-
-    <!-- ABA 1: ESTOQUE -->
-    <section id="tab-stock" class="tab-content space-y-3">
-      <div class="flex items-center justify-between">
-        <div>
-          <h2 class="text-base font-bold text-slate-100">Estoque & Despensa</h2>
-          <p class="text-xs text-slate-400">Controle de quantidades e estoque mínimo</p>
-        </div>
-        <button onclick="openItemModal()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md transition">
-          + Novo Item
-        </button>
+  <!-- Container Principal -->
+  <main class="max-w-md mx-auto p-4 space-y-4" id="app-content">
+    <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-md">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-base font-semibold text-emerald-400 flex items-center gap-2">
+          <i data-lucide="package" class="w-5 h-5"></i> Controle de Estoque
+        </h2>
+        <span class="text-xs text-slate-400">Ajuste rápido (+ / -)</span>
       </div>
-
-      <!-- Busca e Filtros por Categoria -->
-      <div class="space-y-2">
-        <input type="text" id="stock-search" oninput="renderStockView()" placeholder="🔎 Buscar item no estoque..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500">
-        
-        <div id="stock-cat-pills" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
-          <!-- Pílulas via JS -->
-        </div>
+      <p class="text-xs text-slate-400 mb-4">Altere a quantidade em estoque diretamente na lista abaixo sem abrir edições:</p>
+      
+      <div id="lista-estoque" class="space-y-3">
+        <!-- Itens carregados dinamicamente pelo JavaScript -->
       </div>
-
-      <!-- Lista de Itens no Estoque -->
-      <div id="stock-container" class="space-y-3">
-        <!-- Renderizado via JS -->
-      </div>
-    </section>
-
-    <!-- ABA 2: A COMPRAR (LISTA GERADA) -->
-    <section id="tab-list" class="tab-content hidden space-y-3">
-      <div class="flex items-center justify-between">
-        <div>
-          <h2 class="text-base font-bold text-slate-100">Lista a Comprar</h2>
-          <p class="text-xs text-slate-400">Itens com sugestão de compra ou marcados</p>
-        </div>
-        <button onclick="openItemModal({toBuy: true})" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-semibold">
-          + Adicionar
-        </button>
-      </div>
-
-      <div id="list-cat-pills" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
-        <!-- Pílulas via JS -->
-      </div>
-
-      <div id="shopping-container" class="space-y-3">
-        <!-- Renderizado via JS -->
-      </div>
-    </section>
-
-    <!-- ABA 3: MERCADO (INTERFACE DE COMPRA) -->
-    <section id="tab-market" class="tab-content hidden space-y-3">
-      <!-- Painel de Totais do Mercado -->
-      <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 space-y-3 shadow-xl">
-        <div class="flex items-center justify-between border-b border-slate-700 pb-2">
-          <span class="text-xs font-semibold text-slate-300">Progresso do Carrinho</span>
-          <span id="market-progress-text" class="text-xs font-bold text-emerald-400">0/0 (0%)</span>
-        </div>
-
-        <div class="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-800">
-          <div id="market-progress-bar" class="bg-emerald-500 h-full w-0 transition-all duration-300"></div>
-        </div>
-
-        <div class="grid grid-cols-3 gap-2 pt-1 text-center">
-          <div class="bg-slate-900 p-2 rounded-xl border border-slate-700/80">
-            <p class="text-[9px] uppercase tracking-wider text-slate-400 font-semibold">Obrigatório</p>
-            <p id="total-mandatory" class="text-xs font-bold text-slate-100 mt-0.5">R$ 0,00</p>
-          </div>
-          <div class="bg-slate-900 p-2 rounded-xl border border-slate-700/80">
-            <p class="text-[9px] uppercase tracking-wider text-amber-400 font-semibold">Extras</p>
-            <p id="total-extras" class="text-xs font-bold text-amber-300 mt-0.5">R$ 0,00</p>
-          </div>
-          <div class="bg-emerald-950/60 p-2 rounded-xl border border-emerald-500/40">
-            <p class="text-[9px] uppercase tracking-wider text-emerald-400 font-extrabold">Total Geral</p>
-            <p id="total-overall" class="text-sm font-black text-emerald-300 mt-0.5">R$ 0,00</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="flex items-center justify-between pt-1">
-        <h3 class="text-xs font-bold text-slate-300">Itens em Compra</h3>
-        <button onclick="openItemModal({isExtra: true, toBuy: true})" class="text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-1 rounded-xl font-bold">
-          + Item Extra
-        </button>
-      </div>
-
-      <div id="market-cat-pills" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
-        <!-- Pílulas via JS -->
-      </div>
-
-      <div id="market-container" class="space-y-3">
-        <!-- Renderizado via JS -->
-      </div>
-
-      <div class="pt-2">
-        <button onclick="confirmFinalizePurchase()" class="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold rounded-2xl shadow-lg shadow-emerald-950 flex items-center justify-center space-x-2 text-sm">
-          <span>✅ Finalizar Compra e Atualizar Estoque</span>
-        </button>
-      </div>
-    </section>
-
-    <!-- ABA 4: HISTÓRICO DE COMPRAS -->
-    <section id="tab-history" class="tab-content hidden space-y-3">
-      <div>
-        <h2 class="text-base font-bold text-slate-100">Histórico de Compras</h2>
-        <p class="text-xs text-slate-400">Registros passados e variação de preços</p>
-      </div>
-
-      <div id="history-container" class="space-y-3">
-        <!-- Renderizado via JS -->
-      </div>
-    </section>
-
+    </div>
   </main>
 
-  <!-- NAVEGAÇÃO INFERIOR FIXA -->
-  <nav class="bg-slate-800 border-t border-slate-700 fixed bottom-0 left-0 right-0 z-40 px-2 py-2">
-    <div class="max-w-md mx-auto grid grid-cols-4 gap-1 text-center">
-      <button onclick="switchTab('stock')" id="nav-stock" class="nav-btn active flex flex-col items-center justify-center py-1.5 rounded-xl text-emerald-400 font-bold transition">
-        <span class="text-base">📦</span>
-        <span class="text-[10px]">Estoque</span>
-      </button>
-
-      <button onclick="switchTab('list')" id="nav-list" class="nav-btn flex flex-col items-center justify-center py-1.5 rounded-xl text-slate-400 hover:text-slate-200 transition relative">
-        <span class="text-base">📋</span>
-        <span class="text-[10px]">A Comprar</span>
-        <span id="badge-buy-count" class="hidden absolute top-1 right-3 bg-emerald-500 text-slate-950 text-[9px] font-black rounded-full px-1.5">0</span>
-      </button>
-
-      <button onclick="switchTab('market')" id="nav-market" class="nav-btn flex flex-col items-center justify-center py-1.5 rounded-xl text-slate-400 hover:text-slate-200 transition">
-        <span class="text-base">🛒</span>
-        <span class="text-[10px]">Mercado</span>
-      </button>
-
-      <button onclick="switchTab('history')" id="nav-history" class="nav-btn flex flex-col items-center justify-center py-1.5 rounded-xl text-slate-400 hover:text-slate-200 transition">
-        <span class="text-base">📜</span>
-        <span class="text-[10px]">Histórico</span>
-      </button>
-    </div>
-  </nav>
-
-  <!-- MODAL: CADASTRO / EDIÇÃO DE ITEM -->
-  <div id="modal-item" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-t-3xl sm:rounded-2xl p-5 space-y-4 max-h-[90vh] overflow-y-auto no-scrollbar shadow-2xl">
-      <div class="flex items-center justify-between border-b border-slate-700 pb-3">
-        <h3 id="modal-item-title" class="text-sm font-bold text-slate-100">Cadastrar Item</h3>
-        <button onclick="closeItemModal()" class="text-slate-400 text-lg px-2">✕</button>
+  <!-- Modal Identificação de Usuário -->
+  <div id="modal-usuario" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-800 border border-slate-700 w-full max-w-xs rounded-xl p-5 shadow-2xl space-y-4">
+      <h3 class="text-base font-bold text-slate-100">Quem está usando?</h3>
+      <p class="text-xs text-slate-400">Informe seu nome para salvar o controle de estoque.</p>
+      <input type="text" id="input-nome-usuario" placeholder="Seu nome (ex: Maria)" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-100 focus:outline-none focus:border-emerald-500">
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="salvarUsuario()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold">Salvar Nome</button>
       </div>
-
-      <form id="form-item" onsubmit="saveItemForm(event)" class="space-y-3">
-        <input type="hidden" id="item-id">
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">Nome do Item *</label>
-          <input type="text" id="item-name" required placeholder="Ex: Arroz, Sabão..." list="list-existing-names" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-emerald-500">
-          <datalist id="list-existing-names"></datalist>
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">Categoria *</label>
-          <input type="text" id="item-category" required placeholder="Ex: Mercearia e Grãos, Limpeza..." list="list-existing-cats" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-emerald-500">
-          <datalist id="list-existing-cats"></datalist>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1">Unidade *</label>
-            <select id="item-unit" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100">
-              <option value="un">Unidade (un)</option>
-              <option value="kg">Quilograma (kg)</option>
-              <option value="L">Litro (L)</option>
-              <option value="pacote">Pacote</option>
-              <option value="g">Grama (g)</option>
-              <option value="ml">Mililitro (ml)</option>
-            </select>
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1">Marca Sugerida</label>
-            <input type="text" id="item-brand" placeholder="Ex: Camil, Ninho..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100">
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1">Estoque Mínimo</label>
-            <input type="number" id="item-min" min="0" step="any" value="1" oninput="updateModalSuggestion()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100">
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1">Estoque Atual</label>
-            <input type="number" id="item-current" min="0" step="any" value="0" oninput="updateModalSuggestion()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100">
-          </div>
-        </div>
-
-        <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-700 flex items-center justify-between text-xs">
-          <span class="text-slate-400">Sugestão de Compra:</span>
-          <span id="modal-suggested-text" class="font-bold text-emerald-400">1 un</span>
-        </div>
-
-        <div class="flex items-center justify-between pt-1">
-          <label class="text-xs font-semibold text-slate-300">Marcar para comprar agora?</label>
-          <input type="checkbox" id="item-to-buy" class="w-5 h-5 accent-emerald-500 rounded cursor-pointer" checked>
-        </div>
-
-        <div class="pt-2 flex gap-2">
-          <button type="button" onclick="closeItemModal()" class="w-1/2 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs font-bold rounded-xl">Cancelar</button>
-          <button type="submit" class="w-1/2 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl">Salvar Item</button>
-        </div>
-      </form>
     </div>
   </div>
 
-  <!-- MODAL: NOME DO USUÁRIO -->
-  <div id="modal-user" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-800 border border-slate-700 w-full max-w-xs rounded-2xl p-5 space-y-3 text-center shadow-2xl">
-      <h3 class="text-sm font-bold text-slate-100">Qual é o seu nome?</h3>
-      <p class="text-xs text-slate-400">Seu nome será exibido nas alterações e no recurso "Eu pego!".</p>
-      <input type="text" id="user-input-name" placeholder="Ex: Maria" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 text-center focus:outline-none focus:border-emerald-500">
-      <button onclick="saveUserName()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl">Salvar</button>
-    </div>
-  </div>
-
-  <!-- MODAL: COMPARTILHAR / SINCRONIZAR -->
-  <div id="modal-share" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-800 border border-slate-700 w-full max-w-sm rounded-2xl p-5 space-y-3 shadow-2xl">
-      <div class="flex items-center justify-between border-b border-slate-700 pb-2">
-        <h3 class="text-sm font-bold text-slate-100">Compartilhar Lista</h3>
-        <button onclick="closeShareModal()" class="text-slate-400">✕</button>
-      </div>
-      <p class="text-xs text-slate-300 leading-relaxed">
-        Copie o link abaixo para enviar sua lista com os dados atuais salvos:
-      </p>
-      <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-700 flex items-center justify-between gap-2">
-        <input type="text" id="share-link-input" readonly class="bg-transparent text-[11px] text-emerald-400 font-mono w-full focus:outline-none">
-        <button onclick="copyShareUrl()" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg shrink-0">Copiar</button>
-      </div>
-      <button onclick="resetToDefaultsPrompt()" class="w-full py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs font-semibold rounded-xl mt-2">
-        Restaurar Lista Padrão de 58 Itens
-      </button>
-    </div>
-  </div>
-
-  <!-- JAVASCRIPT PURO AUTÔNOMO -->
   <script>
-    // --- LISTA PADRÃO DE 58 ITENS CATEGORIZADOS ---
-    const DEFAULT_58_ITEMS = [
-      // Mercearia e Grãos
-      { id: 'i1', name: 'Sabão em pó', category: 'Limpeza e Lavanderia', unit: 'pacote', minStock: 1, currentStock: 0, toBuy: true },
-      { id: 'i2', name: 'Oleo', category: 'Mercearia e Grãos', unit: 'un', minStock: 2, currentStock: 0, toBuy: true },
-      { id: 'i3', name: 'Açúcar', category: 'Mercearia e Grãos', unit: 'kg', minStock: 2, currentStock: 0, toBuy: true },
-      { id: 'i4', name: 'Feijão', category: 'Mercearia e Grãos', unit: 'kg', minStock: 2, currentStock: 0, toBuy: true },
-      { id: 'i5', name: 'Arroz', category: 'Mercearia e Grãos', unit: 'kg', minStock: 5, currentStock: 0, toBuy: true },
-      { id: 'i6', name: 'Café', category: 'Mercearia e Grãos', unit: 'pacote', minStock: 2, currentStock: 0, toBuy: true },
-      { id: 'i7', name: 'Macarrão Espaguete', category: 'Mercearia e Grãos', unit: 'pacote', minStock: 2, currentStock: 0, toBuy: true },
-      { id: 'i8', name: 'Macarrão - Penne ou Parafuso', category: 'Mercearia e Grãos', unit: 'pacote', minStock: 2, currentStock: 0, toBuy: true },
-      { id: 'i9', name: 'Farinha de Trigo', category: 'Mercearia e Grãos', unit: 'kg', minStock: 1, currentStock: 0, toBuy: true },
-      { id: 'i10', name: 'Farinha de Mandioca', category: 'Mercearia e Grãos', unit: 'kg', minStock: 1, currentStock: 0, toBuy: true },
-      { id: 'i11', name: 'Flocão de milho', category: 'Mercearia e Grãos', unit: 'pacote', minStock: 2, currentStock: 0, toBuy: true },
-      { id: 'i12', name: 'Milho em conserva', category: 'Mercearia e Grãos', unit: 'un', minStock: 2, currentStock: 0, toBuy: true },
-      { id: 'i13', name: 'Sardinha em lata', category: 'Mercearia e Grãos', unit: 'un', minStock: 3, currentStock: 0, toBuy: true },
-      { id: 'i14', name: 'Leite em pó', category: 'Mercearia e Grãos', unit: 'pacote', minStock: 2, currentStock: 0, toBuy: true },
-      { id: 'i15', name: 'Leite condensado', category: 'Mercearia e Grãos', unit: 'un', minStock: 2, currentStock: 0, toBuy: true },
-      { id: 'i16', name: 'Creme de leite', category: 'Mercearia e Grãos', unit: 'un', minStock: 2, currentStock: 0, toBuy: true },
-      { id: 'i17', name: 'Maionese Tradicional', category: 'Mercearia e Grãos', unit: 'un', minStock: 1, currentStock: 0, toBuy: true },
-      { id: 'i18', name: 'Ketchup', category: 'Mercearia e Grãos', unit: 'un', minStock: 1, currentStock: 0, toBuy: true },
-      { id: 'i19', name: 'Vinagre de alcool', category: 'Mercearia e Grãos', unit: 'un', minStock: 1, currentStock: 0, toBuy: true },
-      { id: 'i20', name: 'Sal Marinho', category: 'Mercearia e Grãos', unit: 'kg', minStock: 1, currentStock: 0, toBuy: true },
-      { id: 'i21', name: 'Fermento dr Oetker', category: 'Mercearia e Grãos', unit: 'un', minStock: 1, currentStock: 0, toBuy: true },
-
-      // Laticínios, Frios e Padaria
-      { id: 'i22', name: 'Pão de Forma', category: 'Laticínios, Frios e Padaria', unit: 'pacote', minStock: 1, currentStock: 0, toBuy: true },
-      { id: 'i23', name: 'Ovos', category: 'Laticínios, Frios e Padaria', unit: 'un', minStock: 12, currentStock: 0, toBuy: true },
-      { id: 'i24', name: 'Queijo ralado', category: 'Laticínios, Frios e Padaria', unit: 'pacote', minStock: 2, currentStock: 0, toBuy: true },
-      { id: 'i25', name: 'Requeijão', category: 'Laticínios, Frios e Padaria', unit: 'un', minStock: 1, currentStock: 0, toBuy: true },
-      { id: 'i26', name: 'Queijo Fatiado', category: 'Laticínios, Frios e Padaria', unit: 'kg', minStock: 0.3, currentStock: 0, toBuy: true },
-      { id: 'i27', name: 'Presunto Fatiado', category: 'Laticínios, Frios e Padaria', unit: 'kg', minStock: 0.3, currentStock: 0, toBuy: true },
-      { id: 'i28', name: 'Margarina Tradicional', category: 'Laticínios, Frios e Padaria', unit: 'un', minStock: 1, currentStock: 0, toBuy: true },
-      { id: 'i29', name: 'Margarina Alho', category: 'Laticínios, Frios e Padaria', unit: 'un', minStock: 1, currentStock: 0, toBuy: true },
-
-      // Carnes, Aves e Congelados
-      { id: 'i30', name: 'Hambúrguer Tradicional', category: 'Carnes, Aves e Congelados', unit: 'pacote', minStock: 1, currentStock: 0, toBuy: true },
-      { id: 'i31', name: 'Hambúrguer 180g', category: 'Carnes, Aves e Congelados', unit: 'pacote', minStock: 1, currentStock: 0, toBuy: true },
-      { id: 'i32', name: 'Batata Palito congelada', category: 'Carnes, Aves e Congelados', unit: 'pacote', minStock: 1, currentStock: 0, toBuy: true },
-      { id: 'i33', name: 'Coxa', category: 'Carnes, Aves e Congelados', unit: 'kg', minStock: 1, currentStock: 0, toBuy: true },
-      { id: 'i34', name: 'Sobrecoxa', category: 'Carnes, Aves e Congelados', unit: 'kg', minStock: 1, currentStock: 0, toBuy: true },
-      { id: 'i35', name: 'Moida Suina', category: 'Carnes, Aves e Congelados', unit: 'kg', minStock: 1, currentStock: 0, toBuy: true },
-      { id: 'i36', name: 'File de Frango / Sassami', category: 'Carnes, Aves e Congelados', unit: 'kg', minStock: 2, currentStock: 0, toBuy: true },
-
-      // Limpeza e Lavanderia
-      { id: 'i37', name: 'Detergente', category: 'Limpeza e Lavanderia', unit: 'un', minStock: 3, currentStock: 0, toBuy: true },
-      { id: 'i38', name: 'Alcool', category: 'Limpeza e Lavanderia', unit: 'un', minStock: 1, currentStock: 0, toBuy: true },
-      { id: 'i39', name: 'Amaciante 5 litros', category: 'Limpeza e Lavanderia', unit: 'un', minStock: 1, currentStock: 0, toBuy: true },
-      { id: 'i40', name: 'Amaciante Concentrado', category: 'Limpeza e Lavanderia', unit: 'un', minStock: 1, currentStock: 0, toBuy: true },
-      { id: 'i41', name: 'Limpa Aluminio', category: 'Limpeza e Lavanderia', unit: 'un', minStock: 1, currentStock: 0, toBuy: true },
-      { id: 'i42', name: 'Sapólio', category: 'Limpeza e Lavanderia', unit: 'un', minStock: 1, currentStock: 0, toBuy: true },
-      { id: 'i43', name: 'Perfex', category: 'Limpeza e Lavanderia', unit: 'un', minStock: 1, currentStock: 0, toBuy: true },
-      { id: 'i44', name: 'Palha de Aço', category: 'Limpeza e Lavanderia', unit: 'pacote', minStock: 1, currentStock: 0, toBuy: true },
-      { id: 'i45', name: 'Esponja', category: 'Limpeza e Lavanderia', unit: 'un', minStock: 1, currentStock: 0, toBuy: true },
-      { id: 'i46', name: 'Lava Roupas Líquido 5L', category: 'Limpeza e Lavanderia', unit: 'un', minStock: 1, currentStock: 0, toBuy: true },
-
-      // Higiene Pessoal
-      { id: 'i47', name: 'Sabonetes', category: 'Higiene Pessoal', unit: 'un', minStock: 5, currentStock: 0, toBuy: true },
-      { id: 'i48', name: 'Sabonete Thiago', category: 'Higiene Pessoal', unit: 'un', minStock: 1, currentStock: 0, toBuy: true },
-      { id: 'i49', name: 'Pasta de Dente - Casa', category: 'Higiene Pessoal', unit: 'un', minStock: 2, currentStock: 0, toBuy: true },
-      { id: 'i50', name: 'Pasta de Dente - Bolsa', category: 'Higiene Pessoal', unit: 'un', minStock: 1, currentStock: 0, toBuy: true },
-      { id: 'i51', name: 'Escova de Dente', category: 'Higiene Pessoal', unit: 'un', minStock: 1, currentStock: 0, toBuy: true },
-      { id: 'i52', name: 'Papel Higiênico', category: 'Higiene Pessoal', unit: 'pacote', minStock: 1, currentStock: 0, toBuy: true },
-
-      // Descartáveis e Utensílios
-      { id: 'i53', name: 'Papel alumínio', category: 'Descartáveis e Utensílios', unit: 'un', minStock: 1, currentStock: 0, toBuy: true },
-      { id: 'i54', name: 'Papel Manteiga', category: 'Descartáveis e Utensílios', unit: 'un', minStock: 1, currentStock: 0, toBuy: true },
-      { id: 'i55', name: 'Film PVC', category: 'Descartáveis e Utensílios', unit: 'un', minStock: 1, currentStock: 0, toBuy: true },
-      { id: 'i56', name: 'Papel Toalha', category: 'Descartáveis e Utensílios', unit: 'pacote', minStock: 2, currentStock: 0, toBuy: true },
-
-      // Hortifruti e Temperos
-      { id: 'i57', name: 'Suco', category: 'Hortifruti e Temperos', unit: 'un', minStock: 3, currentStock: 0, toBuy: true },
-      { id: 'i58', name: 'Alho', category: 'Hortifruti e Temperos', unit: 'kg', minStock: 0.5, currentStock: 0, toBuy: true }
+    // Lista padrão com os itens categorizados
+    const itensPadrao = [
+      { id: 1, nome: "Sabão em pó", categoria: "Limpeza e Lavanderia", estoqueAtual: 1, estoqueMinimo: 2, unidade: "pacote" },
+      { id: 2, nome: "Oleo", categoria: "Mercearia e Grãos", estoqueAtual: 2, estoqueMinimo: 3, unidade: "L" },
+      { id: 3, nome: "Sabonetes", categoria: "Higiene Pessoal", estoqueAtual: 4, estoqueMinimo: 5, unidade: "un" },
+      { id: 4, nome: "Suco", categoria: "Mercearia e Grãos", estoqueAtual: 2, estoqueMinimo: 4, unidade: "un" },
+      { id: 5, nome: "Maionese Tradicional", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 1, unidade: "un" },
+      { id: 6, nome: "Detergente", categoria: "Limpeza e Lavanderia", estoqueAtual: 3, estoqueMinimo: 4, unidade: "un" },
+      { id: 7, nome: "Arroz", categoria: "Mercearia e Grãos", estoqueAtual: 2, estoqueMinimo: 2, unidade: "kg" },
+      { id: 8, nome: "Feijão", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 3, unidade: "kg" },
+      { id: 9, nome: "Café", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 2, unidade: "pacote" },
+      { id: 10, nome: "Leite em pó", categoria: "Laticínios e Frios", estoqueAtual: 1, estoqueMinimo: 2, unidade: "pacote" }
     ];
 
-    // --- ESTADO DA APLICAÇÃO ---
-    let itemsState = [];
-    let historyState = [];
-    let userName = localStorage.getItem('ms_user_name') || 'Usuário';
-    let collapsedCats = {};
-    let activeCatStock = 'TODAS';
-    let activeCatList = 'TODAS';
-    let activeCatMarket = 'TODAS';
+    let usuarioAtual = localStorage.getItem('usuario_compras') || '';
+    let meusItens = JSON.parse(localStorage.getItem('itens_estoque')) || itensPadrao;
 
-    // --- INICIALIZAÇÃO INEVITÁVEL E INSTANTÂNEA ---
-    window.addEventListener('DOMContentLoaded', () => {
-      loadData();
-      updateUserUI();
-      renderAllViews();
-    });
-
-    function loadData() {
-      const hashData = parseHashData();
-      if (hashData && hashData.length > 0) {
-        itemsState = hashData;
-        saveItemsToStorage();
+    window.onload = function() {
+      if (!usuarioAtual) {
+        document.getElementById('modal-usuario').classList.remove('hidden');
       } else {
-        const stored = localStorage.getItem('ms_items_data');
-        if (stored) {
-          try {
-            itemsState = JSON.parse(stored);
-          } catch(e) {
-            itemsState = JSON.parse(JSON.stringify(DEFAULT_58_ITEMS));
-          }
-        } else {
-          itemsState = JSON.parse(JSON.stringify(DEFAULT_58_ITEMS));
-          saveItemsToStorage();
-        }
+        document.getElementById('lbl-usuario').innerText = usuarioAtual;
       }
+      renderizarEstoque();
+    };
 
-      const storedHist = localStorage.getItem('ms_history_data');
-      if (storedHist) {
-        try { historyState = JSON.parse(storedHist); } catch(e) { historyState = []; }
-      }
-    }
+    function renderizarEstoque() {
+      const container = document.getElementById('lista-estoque');
+      container.innerHTML = '';
 
-    function saveItemsToStorage() {
-      localStorage.setItem('ms_items_data', JSON.stringify(itemsState));
-    }
+      meusItens.forEach((item, index) => {
+        const precisaComprar = item.estoqueAtual <= item.estoqueMinimo;
+        
+        const card = document.createElement('div');
+        card.className = `p-3 rounded-lg border flex items-center justify-between transition ${
+          precisaComprar 
+            ? 'bg-amber-950/30 border-amber-800/50' 
+            : 'bg-slate-900 border-slate-700/80'
+        }`;
 
-    function saveHistoryToStorage() {
-      localStorage.setItem('ms_history_data', JSON.stringify(historyState));
-    }
-
-    function resetToDefaultsPrompt() {
-      if (confirm('Deseja restaurar a lista com os 58 itens padrão cadastrados? Seus valores atuais serão reiniciados.')) {
-        itemsState = JSON.parse(JSON.stringify(DEFAULT_58_ITEMS));
-        saveItemsToStorage();
-        renderAllViews();
-        closeShareModal();
-      }
-    }
-
-    function renderAllViews() {
-      renderStockView();
-      renderShoppingView();
-      renderMarketView();
-      renderHistory();
-      updateBadges();
-      populateDatalists();
-    }
-
-    function populateDatalists() {
-      const namesList = document.getElementById('list-existing-names');
-      const catsList = document.getElementById('list-existing-cats');
-      if (namesList) {
-        namesList.innerHTML = [...new Set(itemsState.map(i => i.name))].map(n => `<option value="${escapeHtml(n)}">`).join('');
-      }
-      if (catsList) {
-        catsList.innerHTML = [...new Set(itemsState.map(i => i.category || 'Geral'))].map(c => `<option value="${escapeHtml(c)}">`).join('');
-      }
-    }
-
-    function getCategoriesList(list) {
-      const cats = [...new Set(list.map(i => i.category || 'Geral'))].sort();
-      return ['TODAS', ...cats];
-    }
-
-    function renderPills(containerId, cats, activeCat, viewType) {
-      const el = document.getElementById(containerId);
-      if (!el) return;
-      el.innerHTML = cats.map(c => {
-        const active = c === activeCat;
-        return `
-          <button onclick="setCatFilter('${viewType}', '${escapeHtml(c)}')" class="shrink-0 px-3 py-1 rounded-xl text-xs font-semibold transition ${active ? 'bg-emerald-600 text-white shadow-md' : 'bg-slate-800 text-slate-400 border border-slate-700 hover:text-slate-200'}">
-            ${escapeHtml(c)}
-          </button>
-        `;
-      }).join('');
-    }
-
-    function setCatFilter(viewType, cat) {
-      if (viewType === 'stock') activeCatStock = cat;
-      if (viewType === 'list') activeCatList = cat;
-      if (viewType === 'market') activeCatMarket = cat;
-      renderAllViews();
-    }
-
-    function toggleCat(key) {
-      collapsedCats[key] = !collapsedCats[key];
-      renderAllViews();
-    }
-
-    // ABA 1: ESTOQUE
-    function renderStockView() {
-      const container = document.getElementById('stock-container');
-      const search = (document.getElementById('stock-search').value || '').toLowerCase();
-      
-      let filtered = itemsState.filter(i => i.name.toLowerCase().includes(search));
-      renderPills('stock-cat-pills', getCategoriesList(itemsState), activeCatStock, 'stock');
-
-      if (activeCatStock !== 'TODAS') {
-        filtered = filtered.filter(i => (i.category || 'Geral') === activeCatStock);
-      }
-
-      if (filtered.length === 0) {
-        container.innerHTML = `<div class="text-center py-8 text-xs text-slate-500 bg-slate-800/40 rounded-2xl border border-slate-800">Nenhum item encontrado no estoque.</div>`;
-        return;
-      }
-
-      const grouped = groupByCat(filtered);
-      container.innerHTML = Object.keys(grouped).sort().map(cat => {
-        const key = `stk_${cat}`;
-        const isCollapsed = collapsedCats[key];
-        const items = grouped[cat];
-
-        return `
-          <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-sm">
-            <button onclick="toggleCat('${key}')" class="w-full px-4 py-2.5 bg-slate-800/90 flex items-center justify-between border-b border-slate-700/60 text-xs font-bold text-slate-200">
-              <span class="uppercase tracking-wider text-emerald-400">📁 ${escapeHtml(cat)} (${items.length})</span>
-              <span>${isCollapsed ? '▼' : '▲'}</span>
-            </button>
-            <div class="${isCollapsed ? 'hidden' : 'p-3 space-y-2.5'}">
-              ${items.map(item => {
-                const isLow = item.currentStock <= item.minStock;
-                const lastPrice = item.lastPricePaid ? `R$ ${item.lastPricePaid.toFixed(2)}` : 'Sem registro';
-                const timeStr = item.lastEditedAt ? formatTimeAgo(item.lastEditedAt) : '';
-
-                return `
-                  <div class="bg-slate-900 border border-slate-700/80 rounded-xl p-3 space-y-2">
-                    <div class="flex items-start justify-between">
-                      <div>
-                        <h4 class="font-bold text-xs text-slate-100">${escapeHtml(item.name)}</h4>
-                        <p class="text-[10px] text-slate-400">Último preço: <span class="text-slate-300">${lastPrice}</span></p>
-                      </div>
-                      <div class="flex gap-1">
-                        <button onclick="openItemModal('${item.id}')" class="p-1 text-slate-400 hover:text-emerald-400 text-xs">✏️</button>
-                        <button onclick="deleteItem('${item.id}')" class="p-1 text-slate-400 hover:text-red-400 text-xs">🗑️</button>
-                      </div>
-                    </div>
-
-                    <div class="grid grid-cols-3 gap-2 bg-slate-950 p-2 rounded-lg border border-slate-800 text-center text-xs">
-                      <div>
-                        <span class="text-[9px] text-slate-500 uppercase block">Atual</span>
-                        <span class="font-bold ${isLow ? 'text-red-400' : 'text-slate-200'}">${item.currentStock} ${item.unit}</span>
-                      </div>
-                      <div>
-                        <span class="text-[9px] text-slate-500 uppercase block">Mínimo</span>
-                        <span class="font-bold text-slate-300">${item.minStock} ${item.unit}</span>
-                      </div>
-                      <div>
-                        <span class="text-[9px] text-slate-500 uppercase block">Comprar?</span>
-                        <button onclick="toggleToBuy('${item.id}')" class="px-2 py-0.5 rounded text-[10px] font-bold ${item.toBuy ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-400 border border-slate-700'}">
-                          ${item.toBuy ? 'SIM' : 'NÃO'}
-                        </button>
-                      </div>
-                    </div>
-
-                    ${item.lastEditedBy ? `<p class="text-[9px] text-slate-500 italic text-right">Editado por ${escapeHtml(item.lastEditedBy)} ${timeStr}</p>` : ''}
-                  </div>
-                `;
-              }).join('')}
+        card.innerHTML = `
+          <div class="flex-1 pr-2">
+            <div class="flex items-center gap-2">
+              <span class="font-medium text-sm text-slate-100">${item.nome}</span>
+              ${precisaComprar ? '<span class="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded font-semibold">Repor</span>' : ''}
+            </div>
+            <div class="text-xs text-slate-400 mt-0.5">
+              <span>Mínimo: ${item.estoqueMinimo} ${item.unidade}</span> • 
+              <span class="text-slate-500">${item.categoria}</span>
             </div>
           </div>
-        `;
-      }).join('');
-    }
 
-    // ABA 2: A COMPRAR
-    function renderShoppingView() {
-      const container = document.getElementById('shopping-container');
-      let buyList = itemsState.filter(i => i.toBuy);
-
-      renderPills('list-cat-pills', getCategoriesList(buyList), activeCatList, 'list');
-
-      if (activeCatList !== 'TODAS') {
-        buyList = buyList.filter(i => (i.category || 'Geral') === activeCatList);
-      }
-
-      if (buyList.length === 0) {
-        container.innerHTML = `<div class="text-center py-10 text-xs text-slate-400 bg-slate-800/40 rounded-2xl border border-slate-800">Sua lista de compras está vazia! Nossos itens entram aqui quando o estoque está baixo ou marcados com "Comprar".</div>`;
-        return;
-      }
-
-      const grouped = groupByCat(buyList);
-      container.innerHTML = Object.keys(grouped).sort().map(cat => {
-        const key = `lst_${cat}`;
-        const isCollapsed = collapsedCats[key];
-        const items = grouped[cat];
-
-        return `
-          <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-sm">
-            <button onclick="toggleCat('${key}')" class="w-full px-4 py-2.5 bg-slate-800/90 flex items-center justify-between border-b border-slate-700/60 text-xs font-bold text-slate-200">
-              <span class="uppercase tracking-wider text-emerald-400">📁 ${escapeHtml(cat)} (${items.length})</span>
-              <span>${isCollapsed ? '▼' : '▲'}</span>
+          <!-- Controle Rápido de Estoque -->
+          <div class="flex items-center bg-slate-800 border border-slate-700 rounded-lg p-1 space-x-1">
+            <button onclick="alterarEstoque(${index}, -1)" class="w-7 h-7 bg-slate-700 hover:bg-slate-600 rounded text-slate-200 font-bold flex items-center justify-center transition active:scale-95 text-base">
+              -
             </button>
-            <div class="${isCollapsed ? 'hidden' : 'p-3 space-y-2.5'}">
-              ${items.map(item => {
-                const suggestedQty = Math.max(1, item.minStock - item.currentStock);
-                return `
-                  <div class="bg-slate-900 border border-slate-700/80 rounded-xl p-3 space-y-2">
-                    <div class="flex items-start justify-between">
-                      <div>
-                        <h4 class="font-bold text-xs text-slate-100">${escapeHtml(item.name)}</h4>
-                        <p class="text-xs text-emerald-400 font-semibold mt-0.5">Sugestão: ${suggestedQty} ${item.unit}</p>
-                      </div>
-                      <button onclick="toggleToBuy('${item.id}')" class="text-slate-500 hover:text-slate-300 text-xs">✕</button>
-                    </div>
-
-                    <div class="flex items-center justify-between pt-1 border-t border-slate-800">
-                      <span class="text-[10px] ${item.claimedBy ? 'text-emerald-400 font-bold' : 'text-slate-500'}">
-                        ${item.claimedBy ? `✋ ${escapeHtml(item.claimedBy)} pega!` : 'Ninguém pegou'}
-                      </span>
-                      <button onclick="claimItem('${item.id}')" class="px-2.5 py-1 bg-slate-800 border border-slate-700 rounded-lg text-xs text-slate-200 font-medium">
-                        ${item.claimedBy === userName ? 'Soltar' : 'Eu Pego!'}
-                      </button>
-                    </div>
-                  </div>
-                `;
-              }).join('')}
+            
+            <div class="px-2 text-center min-w-[2.5rem]">
+              <span class="font-bold text-sm text-emerald-400">${item.estoqueAtual}</span>
+              <span class="text-[10px] text-slate-400 block -mt-1">${item.unidade}</span>
             </div>
+
+            <button onclick="alterarEstoque(${index}, 1)" class="w-7 h-7 bg-slate-700 hover:bg-slate-600 rounded text-slate-200 font-bold flex items-center justify-center transition active:scale-95 text-base">
+              +
+            </button>
           </div>
         `;
-      }).join('');
-    }
 
-    // ABA 3: MERCADO
-    function renderMarketView() {
-      const container = document.getElementById('market-container');
-      const allBuyList = itemsState.filter(i => i.toBuy);
-
-      let totalMandatory = 0;
-      let totalExtras = 0;
-      let purchasedCount = 0;
-
-      allBuyList.forEach(item => {
-        const qty = parseFloat(item.marketQty) || Math.max(1, item.minStock - item.currentStock);
-        const price = parseFloat(item.marketPrice) || 0;
-        const total = qty * price;
-
-        if (item.purchased) purchasedCount++;
-
-        if (item.isExtra) totalExtras += total;
-        else totalMandatory += total;
+        container.appendChild(card);
       });
 
-      const totalOverall = totalMandatory + totalExtras;
-      const progressPercent = allBuyList.length > 0 ? Math.round((purchasedCount / allBuyList.length) * 100) : 0;
-
-      document.getElementById('total-mandatory').textContent = `R$ ${totalMandatory.toFixed(2)}`;
-      document.getElementById('total-extras').textContent = `R$ ${totalExtras.toFixed(2)}`;
-      document.getElementById('total-overall').textContent = `R$ ${totalOverall.toFixed(2)}`;
-      document.getElementById('market-progress-text').textContent = `${purchasedCount}/${allBuyList.length} (${progressPercent}%)`;
-      document.getElementById('market-progress-bar').style.width = `${progressPercent}%`;
-
-      renderPills('market-cat-pills', getCategoriesList(allBuyList), activeCatMarket, 'market');
-
-      let displayList = allBuyList;
-      if (activeCatMarket !== 'TODAS') {
-        displayList = displayList.filter(i => (i.category || 'Geral') === activeCatMarket);
-      }
-
-      if (displayList.length === 0) {
-        container.innerHTML = `<div class="text-center py-8 text-xs text-slate-500 bg-slate-800/40 rounded-2xl border border-slate-800">Nenhum item na lista de mercado nesta categoria.</div>`;
-        return;
-      }
-
-      const grouped = groupByCat(displayList);
-      container.innerHTML = Object.keys(grouped).sort().map(cat => {
-        const key = `mkt_${cat}`;
-        const isCollapsed = collapsedCats[key];
-        const items = grouped[cat];
-
-        return `
-          <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-sm">
-            <button onclick="toggleCat('${key}')" class="w-full px-4 py-2.5 bg-slate-800/90 flex items-center justify-between border-b border-slate-700/60 text-xs font-bold text-slate-200">
-              <span class="uppercase tracking-wider text-emerald-400">📁 ${escapeHtml(cat)} (${items.length})</span>
-              <span>${isCollapsed ? '▼' : '▲'}</span>
-            </button>
-            <div class="${isCollapsed ? 'hidden' : 'p-3 space-y-3'}">
-              ${items.map(item => {
-                const qty = item.marketQty !== undefined ? item.marketQty : Math.max(1, item.minStock - item.currentStock);
-                const price = item.marketPrice !== undefined ? item.marketPrice : '';
-                const itemTotal = (parseFloat(price) || 0) * (parseFloat(qty) || 0);
-                const lastPaid = item.lastPricePaid ? `R$ ${item.lastPricePaid.toFixed(2)}` : 'Sem registro';
-
-                return `
-                  <div class="bg-slate-900 border ${item.purchased ? 'border-emerald-500/50 opacity-75' : 'border-slate-700'} rounded-xl p-3 space-y-2.5">
-                    <div class="flex items-start justify-between">
-                      <div class="flex items-center space-x-2">
-                        <input type="checkbox" ${item.purchased ? 'checked' : ''} onchange="toggleMarketPurchased('${item.id}', this.checked)" class="w-5 h-5 accent-emerald-500 rounded cursor-pointer">
-                        <div>
-                          <h4 class="font-bold text-xs ${item.purchased ? 'line-through text-slate-400' : 'text-slate-100'}">${escapeHtml(item.name)}</h4>
-                          <p class="text-[10px] text-slate-400">Último preço pago: <span class="text-slate-300 font-semibold">${lastPaid}</span></p>
-                        </div>
-                      </div>
-
-                      <button onclick="toggleClassification('${item.id}')" class="px-2 py-0.5 rounded text-[9px] font-bold ${item.isExtra ? 'badge-extra' : 'badge-mandatory'}">
-                        ${item.isExtra ? 'EXTRA' : 'OBRIGATÓRIO'}
-                      </button>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-2">
-                      <div>
-                        <label class="block text-[9px] text-slate-400 mb-0.5">Preço Un. (R$)</label>
-                        <input type="number" step="0.01" min="0" placeholder="0,00" value="${price}" oninput="updateMarketPrice('${item.id}', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-emerald-400 font-bold focus:outline-none focus:border-emerald-500">
-                      </div>
-
-                      <div>
-                        <label class="block text-[9px] text-slate-400 mb-0.5">Qtd (${item.unit})</label>
-                        <div class="flex items-center space-x-1">
-                          <button onclick="adjustMarketQty('${item.id}', -1)" class="w-7 h-7 bg-slate-800 border border-slate-700 rounded text-xs font-bold text-slate-300">-</button>
-                          <input type="number" step="any" value="${qty}" oninput="updateMarketQty('${item.id}', this.value)" class="w-full text-center bg-slate-950 border border-slate-700 rounded py-1 text-xs font-bold text-slate-100">
-                          <button onclick="adjustMarketQty('${item.id}', 1)" class="w-7 h-7 bg-slate-800 border border-slate-700 rounded text-xs font-bold text-slate-300">+</button>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-800">
-                      <input type="text" placeholder="Marca comprada (opcional)..." value="${item.marketBrand || ''}" oninput="updateMarketBrand('${item.id}', this.value)" class="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-[10px] text-slate-300 w-3/5">
-                      
-                      <div class="text-right">
-                        <span class="text-[9px] text-slate-500 block">Subtotal</span>
-                        <span class="font-extrabold text-xs text-slate-100">R$ ${itemTotal.toFixed(2)}</span>
-                      </div>
-                    </div>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-          </div>
-        `;
-      }).join('');
+      lucide.createIcons();
     }
 
-    // ABA 4: HISTÓRICO
-    function renderHistory() {
-      const container = document.getElementById('history-container');
-      if (historyState.length === 0) {
-        container.innerHTML = `<div class="text-center py-10 text-xs text-slate-500 bg-slate-800/40 rounded-2xl border border-slate-800">Nenhum histórico de compra registrado ainda.</div>`;
-        return;
-      }
-
-      container.innerHTML = historyState.map(h => {
-        const dateStr = new Date(h.timestamp).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
-        return `
-          <div class="bg-slate-800 border border-slate-700 rounded-2xl p-3.5 space-y-2">
-            <div class="flex items-center justify-between border-b border-slate-700 pb-2">
-              <div>
-                <span class="text-xs font-bold text-slate-100">${dateStr}</span>
-                <p class="text-[10px] text-slate-400">Comprador: ${escapeHtml(h.shopper)}</p>
-              </div>
-              <span class="text-sm font-black text-emerald-400">R$ ${h.total.toFixed(2)}</span>
-            </div>
-
-            <div class="space-y-1 text-xs">
-              ${h.items.map(i => `
-                <div class="flex justify-between text-[11px] text-slate-300">
-                  <span>${escapeHtml(i.name)} (${i.qty} ${i.unit})</span>
-                  <span class="font-mono">R$ ${(i.qty * i.price).toFixed(2)}</span>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    // --- AÇÕES E MUTATORES DOS ITENS ---
-    function toggleToBuy(id) {
-      const item = itemsState.find(i => i.id === id);
-      if (item) {
-        item.toBuy = !item.toBuy;
-        item.lastEditedBy = userName;
-        item.lastEditedAt = Date.now();
-        saveItemsToStorage();
-        renderAllViews();
+    // Função para alterar o estoque diretamente da tela principal
+    function alterarEstoque(index, delta) {
+      if (meusItens[index].estoqueAtual + delta >= 0) {
+        meusItens[index].estoqueAtual += delta;
+        salvarDados();
+        renderizarEstoque();
       }
     }
 
-    function deleteItem(id) {
-      if (confirm('Deseja excluir permanentemente este item?')) {
-        itemsState = itemsState.filter(i => i.id !== id);
-        saveItemsToStorage();
-        renderAllViews();
+    function salvarDados() {
+      localStorage.setItem('itens_estoque', JSON.stringify(meusItens));
+    }
+
+    function abrirModalUsuario() {
+      document.getElementById('input-nome-usuario').value = usuarioAtual;
+      document.getElementById('modal-usuario').classList.remove('hidden');
+    }
+
+    function salvarUsuario() {
+      const nome = document.getElementById('input-nome-usuario').value.trim();
+      if (nome) {
+        usuarioAtual = nome;
+        localStorage.setItem('usuario_compras', nome);
+        document.getElementById('lbl-usuario').innerText = nome;
+        document.getElementById('modal-usuario').classList.add('hidden');
       }
-    }
-
-    function claimItem(id) {
-      const item = itemsState.find(i => i.id === id);
-      if (item) {
-        item.claimedBy = item.claimedBy === userName ? '' : userName;
-        saveItemsToStorage();
-        renderAllViews();
-      }
-    }
-
-    function updateMarketPrice(id, val) {
-      const item = itemsState.find(i => i.id === id);
-      if (item) {
-        item.marketPrice = parseFloat(val) || 0;
-        saveItemsToStorage();
-        renderMarketView();
-      }
-    }
-
-    function updateMarketQty(id, val) {
-      const item = itemsState.find(i => i.id === id);
-      if (item) {
-        item.marketQty = parseFloat(val) || 0;
-        saveItemsToStorage();
-        renderMarketView();
-      }
-    }
-
-    function adjustMarketQty(id, delta) {
-      const item = itemsState.find(i => i.id === id);
-      if (item) {
-        const current = item.marketQty !== undefined ? item.marketQty : Math.max(1, item.minStock - item.currentStock);
-        item.marketQty = Math.max(0.1, current + delta);
-        saveItemsToStorage();
-        renderMarketView();
-      }
-    }
-
-    function updateMarketBrand(id, val) {
-      const item = itemsState.find(i => i.id === id);
-      if (item) {
-        item.marketBrand = val;
-        saveItemsToStorage();
-      }
-    }
-
-    function toggleMarketPurchased(id, checked) {
-      const item = itemsState.find(i => i.id === id);
-      if (item) {
-        item.purchased = checked;
-        saveItemsToStorage();
-        renderMarketView();
-      }
-    }
-
-    function toggleClassification(id) {
-      const item = itemsState.find(i => i.id === id);
-      if (item) {
-        item.isExtra = !item.isExtra;
-        saveItemsToStorage();
-        renderMarketView();
-      }
-    }
-
-    function confirmFinalizePurchase() {
-      const buyList = itemsState.filter(i => i.toBuy && (i.purchased || i.marketPrice > 0));
-      if (buyList.length === 0) {
-        alert('Marque ou informe preços de itens no mercado antes de finalizar!');
-        return;
-      }
-
-      if (confirm('Finalizar a compra? Os estoques serão atualizados automaticamente e a compra será salva no histórico.')) {
-        let historyItems = [];
-        let grandTotal = 0;
-
-        itemsState.forEach(item => {
-          if (item.toBuy) {
-            const qtyBought = item.marketQty !== undefined ? item.marketQty : Math.max(1, item.minStock - item.currentStock);
-            const pricePaid = item.marketPrice || 0;
-
-            if (pricePaid > 0 || item.purchased) {
-              item.currentStock = (parseFloat(item.currentStock) || 0) + parseFloat(qtyBought);
-              item.lastPricePaid = pricePaid;
-              item.toBuy = false;
-              item.purchased = false;
-              item.claimedBy = '';
-
-              historyItems.push({
-                name: item.name,
-                qty: qtyBought,
-                unit: item.unit,
-                price: pricePaid,
-                brand: item.marketBrand || item.suggestedBrand || ''
-              });
-
-              grandTotal += (qtyBought * pricePaid);
-            }
-          }
-        });
-
-        historyState.unshift({
-          id: 'h_' + Date.now(),
-          timestamp: Date.now(),
-          shopper: userName,
-          total: grandTotal,
-          items: historyItems
-        });
-
-        saveItemsToStorage();
-        saveHistoryToStorage();
-        renderAllViews();
-        switchTab('history');
-        alert('Compra finalizada com sucesso! Estoque atualizado.');
-      }
-    }
-
-    // --- FORMULÁRIO MODAL ITEM ---
-    function openItemModal(opts = {}) {
-      const isEdit = typeof opts === 'string';
-      const modal = document.getElementById('modal-item');
-      document.getElementById('form-item').reset();
-
-      if (isEdit) {
-        const item = itemsState.find(i => i.id === opts);
-        if (!item) return;
-        document.getElementById('modal-item-title').textContent = 'Editar Item';
-        document.getElementById('item-id').value = item.id;
-        document.getElementById('item-name').value = item.name;
-        document.getElementById('item-category').value = item.category || 'Geral';
-        document.getElementById('item-unit').value = item.unit;
-        document.getElementById('item-brand').value = item.suggestedBrand || '';
-        document.getElementById('item-min').value = item.minStock;
-        document.getElementById('item-current').value = item.currentStock;
-        document.getElementById('item-to-buy').checked = item.toBuy;
-      } else {
-        document.getElementById('modal-item-title').textContent = 'Cadastrar Novo Item';
-        document.getElementById('item-id').value = '';
-        document.getElementById('item-category').value = 'Geral';
-        document.getElementById('item-to-buy').checked = opts.toBuy || false;
-      }
-
-      updateModalSuggestion();
-      modal.classList.remove('hidden');
-    }
-
-    function closeItemModal() {
-      document.getElementById('modal-item').classList.add('hidden');
-    }
-
-    function updateModalSuggestion() {
-      const min = parseFloat(document.getElementById('item-min').value) || 0;
-      const cur = parseFloat(document.getElementById('item-current').value) || 0;
-      const unit = document.getElementById('item-unit').value;
-      const diff = Math.max(0, min - cur);
-      document.getElementById('modal-suggested-text').textContent = `${diff} ${unit}`;
-      if (cur <= min) {
-        document.getElementById('item-to-buy').checked = true;
-      }
-    }
-
-    function saveItemForm(e) {
-      e.preventDefault();
-      const id = document.getElementById('item-id').value;
-      const name = document.getElementById('item-name').value.trim();
-      const category = document.getElementById('item-category').value.trim() || 'Geral';
-      const unit = document.getElementById('item-unit').value;
-      const brand = document.getElementById('item-brand').value.trim();
-      const minStock = parseFloat(document.getElementById('item-min').value) || 0;
-      const currentStock = parseFloat(document.getElementById('item-current').value) || 0;
-      const toBuy = document.getElementById('item-to-buy').checked;
-
-      if (!name) return;
-
-      if (id) {
-        const item = itemsState.find(i => i.id === id);
-        if (item) {
-          item.name = name;
-          item.category = category;
-          item.unit = unit;
-          item.suggestedBrand = brand;
-          item.minStock = minStock;
-          item.currentStock = currentStock;
-          item.toBuy = toBuy;
-          item.lastEditedBy = userName;
-          item.lastEditedAt = Date.now();
-        }
-      } else {
-        itemsState.push({
-          id: 'i_' + Date.now(),
-          name, category, unit,
-          suggestedBrand: brand,
-          minStock, currentStock,
-          toBuy,
-          lastEditedBy: userName,
-          lastEditedAt: Date.now()
-        });
-      }
-
-      saveItemsToStorage();
-      closeItemModal();
-      renderAllViews();
-    }
-
-    // --- MODAL USUÁRIO E COMPARTILHAMENTO ---
-    function promptUserName() {
-      document.getElementById('user-input-name').value = userName;
-      document.getElementById('modal-user').classList.remove('hidden');
-    }
-
-    function saveUserName() {
-      const val = document.getElementById('user-input-name').value.trim();
-      if (val) {
-        userName = val;
-        localStorage.setItem('ms_user_name', userName);
-        updateUserUI();
-        document.getElementById('modal-user').classList.add('hidden');
-        renderAllViews();
-      }
-    }
-
-    function updateUserUI() {
-      document.getElementById('user-name-txt').textContent = userName;
-      document.getElementById('user-avatar').textContent = userName.charAt(0).toUpperCase();
-    }
-
-    function openShareModal() {
-      const compressed = encodeDataToHash(itemsState);
-      const url = `${window.location.origin}${window.location.pathname}#data=${compressed}`;
-      document.getElementById('share-link-input').value = url;
-      document.getElementById('modal-share').classList.remove('hidden');
-    }
-
-    function closeShareModal() {
-      document.getElementById('modal-share').classList.add('hidden');
-    }
-
-    function copyShareUrl() {
-      const input = document.getElementById('share-link-input');
-      input.select();
-      document.execCommand('copy');
-      alert('Link da lista copiado com sucesso!');
-    }
-
-    function encodeDataToHash(data) {
-      try {
-        return btoa(encodeURIComponent(JSON.stringify(data)));
-      } catch(e) { return ''; }
-    }
-
-    function parseHashData() {
-      try {
-        const hash = window.location.hash;
-        if (hash.includes('#data=')) {
-          const raw = hash.replace('#data=', '');
-          return JSON.parse(decodeURIComponent(atob(raw)));
-        }
-      } catch(e) { return null; }
-      return null;
-    }
-
-    function updateBadges() {
-      const buyCount = itemsState.filter(i => i.toBuy).length;
-      const badge = document.getElementById('badge-buy-count');
-      if (buyCount > 0) {
-        badge.textContent = buyCount;
-        badge.classList.remove('hidden');
-      } else {
-        badge.classList.add('hidden');
-      }
-    }
-
-    function switchTab(tab) {
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-      document.querySelectorAll('.nav-btn').forEach(el => {
-        el.classList.remove('text-emerald-400', 'font-bold');
-        el.classList.add('text-slate-400');
-      });
-
-      document.getElementById(`tab-${tab}`).classList.remove('hidden');
-      const activeNav = document.getElementById(`nav-${tab}`);
-      activeNav.classList.remove('text-slate-400');
-      activeNav.classList.add('text-emerald-400', 'font-bold');
-      window.scrollTo(0, 0);
-    }
-
-    function groupByCat(list) {
-      const groups = {};
-      list.forEach(item => {
-        const cat = item.category || 'Geral';
-        if (!groups[cat]) groups[cat] = [];
-        groups[cat].push(item);
-      });
-      return groups;
-    }
-
-    function formatTimeAgo(ts) {
-      if (!ts) return '';
-      const diffSecs = Math.floor((Date.now() - ts) / 1000);
-      if (diffSecs < 60) return 'agora';
-      const diffMins = Math.floor(diffSecs / 60);
-      if (diffMins < 60) return `há ${diffMins} min`;
-      const diffHours = Math.floor(diffMins / 60);
-      if (diffHours < 24) return `há ${diffHours} h`;
-      return `há ${Math.floor(diffHours / 24)} d`;
-    }
-
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str).replace(/[&<>'"]/g, tag => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
-      }[tag] || tag));
     }
   </script>
 </body>
