@@ -1,460 +1,1349 @@
 <!DOCTYPE html>
 <html lang="pt-BR" class="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lista de Compras & Estoque</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            brand: { 500: '#10b981', 600: '#059669', 700: '#047857' }
-          }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MercadoControl - Estoque & Compras</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0f172a',
+                        darkCard: '#1e293b',
+                        darkBorder: '#334155',
+                        brandPrimary: '#10b981',
+                        brandPrimaryHover: '#059669',
+                        brandSecondary: '#3b82f6',
+                        brandAccent: '#f59e0b',
+                    }
+                }
+            }
         }
-      }
-    }
-  </script>
-  <script src="https://unpkg.com/lucide@latest"></script>
+    </script>
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        /* Custom scrollbar for mobile overflow */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+    </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen pb-24 font-sans select-none">
+<body class="bg-darkBg text-slate-100 min-h-screen flex flex-col pb-24 antialiased">
 
-  <!-- Cabeçalho -->
-  <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-40 p-4 shadow-lg">
-    <div class="max-w-md mx-auto flex items-center justify-between">
-      <div class="flex items-center space-x-2">
-        <i data-lucide="shopping-bag" class="w-6 h-6 text-emerald-400"></i>
-        <h1 class="text-lg font-bold bg-gradient-to-r from-emerald-400 to-teal-200 bg-clip-text text-transparent">MercadoSmart</h1>
-      </div>
-      <button onclick="abrirModalUsuario()" id="btn-usuario" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-lg text-emerald-300 text-xs flex items-center gap-1.5 font-medium transition">
-        <i data-lucide="user" class="w-3.5 h-3.5"></i> <span id="lbl-usuario">Convidado</span>
-      </button>
-    </div>
-  </header>
-
-  <!-- Navegação por Abas Inferior -->
-  <nav class="fixed bottom-0 left-0 right-0 bg-slate-800 border-t border-slate-700 z-40">
-    <div class="max-w-md mx-auto flex justify-around p-2">
-      <button onclick="mudarAba('estoque')" id="tab-estoque" class="flex flex-col items-center p-2 text-emerald-400 font-medium text-xs">
-        <i data-lucide="package" class="w-5 h-5 mb-0.5"></i> Estoque
-      </button>
-      <button onclick="mudarAba('comprar')" id="tab-comprar" class="flex flex-col items-center p-2 text-slate-400 hover:text-emerald-400 text-xs transition">
-        <i data-lucide="list-checks" class="w-5 h-5 mb-0.5"></i> A Comprar
-      </button>
-      <button onclick="mudarAba('mercado')" id="tab-mercado" class="flex flex-col items-center p-2 text-slate-400 hover:text-emerald-400 text-xs transition">
-        <i data-lucide="shopping-cart" class="w-5 h-5 mb-0.5"></i> Mercado
-      </button>
-      <button onclick="mudarAba('historico')" id="tab-historico" class="flex flex-col items-center p-2 text-slate-400 hover:text-emerald-400 text-xs transition">
-        <i data-lucide="history" class="w-5 h-5 mb-0.5"></i> Histórico
-      </button>
-    </div>
-  </nav>
-
-  <!-- Conteúdo Principal -->
-  <main class="max-w-md mx-auto p-4 space-y-4">
-
-    <!-- ABA 1: ESTOQUE -->
-    <section id="sec-estoque" class="space-y-4">
-      <div class="flex items-center justify-between">
-        <h2 class="text-base font-semibold text-emerald-400 flex items-center gap-2">
-          <i data-lucide="package" class="w-5 h-5"></i> Controle de Estoque
-        </h2>
-        <button onclick="abrirModalItem()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1">
-          <i data-lucide="plus" class="w-4 h-4"></i> Novo Item
-        </button>
-      </div>
-
-      <input type="text" id="busca-estoque" oninput="renderizarTelas()" placeholder="Buscar item..." class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-100 focus:outline-none focus:border-emerald-500">
-
-      <div id="lista-estoque" class="space-y-4"></div>
-    </section>
-
-    <!-- ABA 2: A COMPRAR -->
-    <section id="sec-comprar" class="space-y-4 hidden">
-      <h2 class="text-base font-semibold text-emerald-400 flex items-center gap-2">
-        <i data-lucide="list-checks" class="w-5 h-5"></i> Sugestão de Compras
-      </h2>
-      <p class="text-xs text-slate-400">Itens com estoque atual menor ou igual ao mínimo:</p>
-      <div id="lista-comprar" class="space-y-3"></div>
-    </section>
-
-    <!-- ABA 3: MERCADO -->
-    <section id="sec-mercado" class="space-y-4 hidden">
-      <div class="bg-slate-800 border border-slate-700 rounded-xl p-3 space-y-2">
-        <div class="flex justify-between text-xs">
-          <span class="text-slate-400">Obrigatórios: <strong id="total-obrigat" class="text-emerald-400">R$ 0,00</strong></span>
-          <span class="text-slate-400">Extras: <strong id="total-extra" class="text-amber-400">R$ 0,00</strong></span>
-        </div>
-        <div class="text-base font-bold text-center border-t border-slate-700 pt-2 text-slate-100">
-          Total da Compra: <span id="total-geral" class="text-emerald-400">R$ 0,00</span>
-        </div>
-      </div>
-
-      <div id="lista-mercado" class="space-y-3"></div>
-
-      <button onclick="finalizarCompra()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm shadow-lg flex items-center justify-center gap-2">
-        <i data-lucide="check-circle-2" class="w-5 h-5"></i> Finalizar Compra e Atualizar Estoque
-      </button>
-    </section>
-
-    <!-- ABA 4: HISTÓRICO -->
-    <section id="sec-historico" class="space-y-4 hidden">
-      <h2 class="text-base font-semibold text-emerald-400 flex items-center gap-2">
-        <i data-lucide="history" class="w-5 h-5"></i> Histórico de Compras
-      </h2>
-      <div id="lista-historico" class="space-y-3"></div>
-    </section>
-
-  </main>
-
-  <!-- Modal Cadastro/Edição de Item -->
-  <div id="modal-item" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-slate-800 border border-slate-700 w-full max-w-sm rounded-xl p-5 shadow-2xl space-y-3">
-      <h3 class="text-base font-bold text-slate-100" id="titulo-modal-item">Cadastrar Item</h3>
-      
-      <input type="hidden" id="edit-index">
-      
-      <div>
-        <label class="text-xs text-slate-400">Nome do Item</label>
-        <input type="text" id="inp-nome" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-slate-100">
-      </div>
-
-      <div>
-        <label class="text-xs text-slate-400">Categoria</label>
-        <select id="inp-cat" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-slate-100">
-          <option value="Mercearia e Grãos">Mercearia e Grãos</option>
-          <option value="Limpeza e Lavanderia">Limpeza e Lavanderia</option>
-          <option value="Higiene Pessoal">Higiene Pessoal</option>
-          <option value="Laticínios e Frios">Laticínios e Frios</option>
-          <option value="Carnes e Aves">Carnes e Aves</option>
-          <option value="Congelados">Congelados</option>
-          <option value="Descartáveis e Utensílios">Descartáveis e Utensílios</option>
-        </select>
-      </div>
-
-      <div class="grid grid-cols-2 gap-2">
-        <div>
-          <label class="text-xs text-slate-400">Estoque Mínimo</label>
-          <input type="number" id="inp-min" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-slate-100" value="1">
-        </div>
-        <div>
-          <label class="text-xs text-slate-400">Estoque Atual</label>
-          <input type="number" id="inp-atual" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-slate-100" value="0">
-        </div>
-      </div>
-
-      <div>
-        <label class="text-xs text-slate-400">Unidade de Medida</label>
-        <select id="inp-und" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-slate-100">
-          <option value="un">un (unidade)</option>
-          <option value="kg">kg (quilo)</option>
-          <option value="L">L (litro)</option>
-          <option value="pacote">pacote</option>
-        </select>
-      </div>
-
-      <div class="flex justify-end gap-2 pt-2">
-        <button onclick="fecharModalItem()" class="px-3 py-1.5 bg-slate-700 text-slate-300 rounded-lg text-xs">Cancelar</button>
-        <button onclick="salvarItem()" class="px-4 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-semibold">Salvar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Identificação Usuário -->
-  <div id="modal-usuario" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-slate-800 border border-slate-700 w-full max-w-xs rounded-xl p-5 shadow-2xl space-y-4">
-      <h3 class="text-base font-bold text-slate-100">Quem está usando?</h3>
-      <input type="text" id="input-nome-usuario" placeholder="Seu nome" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-100">
-      <div class="flex justify-end gap-2">
-        <button onclick="salvarUsuario()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-semibold">Salvar</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // Lista completa dos 58 itens categorizados
-    const itensIniciais = [
-      { nome: "Sabão em pó", categoria: "Limpeza e Lavanderia", estoqueAtual: 1, estoqueMinimo: 2, unidade: "pacote", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Oleo", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 3, unidade: "L", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Sabonetes", categoria: "Higiene Pessoal", estoqueAtual: 3, estoqueMinimo: 5, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Suco", categoria: "Mercearia e Grãos", estoqueAtual: 2, estoqueMinimo: 4, unidade: "un", comprar: false, preco: 0, marca: "", pegou: "", tipo: "Extra" },
-      { nome: "Maionese Tradicional", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 1, unidade: "un", comprar: false, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Detergente", categoria: "Limpeza e Lavanderia", estoqueAtual: 2, estoqueMinimo: 4, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Papel alumínio", categoria: "Descartáveis e Utensílios", estoqueAtual: 0, estoqueMinimo: 1, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Extra" },
-      { nome: "Alcool", categoria: "Limpeza e Lavanderia", estoqueAtual: 1, estoqueMinimo: 2, unidade: "L", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Açúcar", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 2, unidade: "kg", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Feijão", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 3, unidade: "kg", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Arroz", categoria: "Mercearia e Grãos", estoqueAtual: 2, estoqueMinimo: 2, unidade: "kg", comprar: false, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Café", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 2, unidade: "pacote", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Alho", categoria: "Mercearia e Grãos", estoqueAtual: 0, estoqueMinimo: 1, unidade: "kg", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Leite em pó", categoria: "Laticínios e Frios", estoqueAtual: 1, estoqueMinimo: 2, unidade: "pacote", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Pão de Forma", categoria: "Mercearia e Grãos", estoqueAtual: 0, estoqueMinimo: 1, unidade: "pacote", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Macarrão Espaguete", categoria: "Mercearia e Grãos", estoqueAtual: 2, estoqueMinimo: 3, unidade: "pacote", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Ovos", categoria: "Laticínios e Frios", estoqueAtual: 6, estoqueMinimo: 12, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Creme de leite", categoria: "Laticínios e Frios", estoqueAtual: 1, estoqueMinimo: 3, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Macarrão - Penne ou Parafuso", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 2, unidade: "pacote", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Queijo ralado", categoria: "Laticínios e Frios", estoqueAtual: 0, estoqueMinimo: 2, unidade: "pacote", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Extra" },
-      { nome: "Requeijão", categoria: "Laticínios e Frios", estoqueAtual: 0, estoqueMinimo: 1, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Farinha de Trigo", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 1, unidade: "kg", comprar: false, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Pasta de Dente - Casa", categoria: "Higiene Pessoal", estoqueAtual: 1, estoqueMinimo: 2, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Pasta de Dente - Bolsa", categoria: "Higiene Pessoal", estoqueAtual: 0, estoqueMinimo: 1, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Escova de Dente", categoria: "Higiene Pessoal", estoqueAtual: 1, estoqueMinimo: 2, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Sardinha em lata", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 2, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Extra" },
-      { nome: "Amaciante 5 litros", categoria: "Limpeza e Lavanderia", estoqueAtual: 0, estoqueMinimo: 1, unidade: "L", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Amaciante Concentrado", categoria: "Limpeza e Lavanderia", estoqueAtual: 0, estoqueMinimo: 1, unidade: "un", comprar: false, preco: 0, marca: "", pegou: "", tipo: "Extra" },
-      { nome: "Queijo Fatiado", categoria: "Laticínios e Frios", estoqueAtual: 0, estoqueMinimo: 1, unidade: "kg", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Presunto Fatiado", categoria: "Laticínios e Frios", estoqueAtual: 0, estoqueMinimo: 1, unidade: "kg", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Hambúrguer Tradicional", categoria: "Congelados", estoqueAtual: 0, estoqueMinimo: 1, unidade: "pacote", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Extra" },
-      { nome: "Leite condensado", categoria: "Laticínios e Frios", estoqueAtual: 1, estoqueMinimo: 2, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Extra" },
-      { nome: "Ketchup", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 1, unidade: "un", comprar: false, preco: 0, marca: "", pegou: "", tipo: "Extra" },
-      { nome: "Margarina Tradicional", categoria: "Laticínios e Frios", estoqueAtual: 1, estoqueMinimo: 1, unidade: "un", comprar: false, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Margarina Alho", categoria: "Laticínios e Frios", estoqueAtual: 0, estoqueMinimo: 1, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Extra" },
-      { nome: "Hambúrguer 180g", categoria: "Congelados", estoqueAtual: 0, estoqueMinimo: 1, unidade: "pacote", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Extra" },
-      { nome: "Batata Palito congelada", categoria: "Congelados", estoqueAtual: 0, estoqueMinimo: 1, unidade: "pacote", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Extra" },
-      { nome: "Coxa", categoria: "Carnes e Aves", estoqueAtual: 0, estoqueMinimo: 2, unidade: "kg", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Sobrecoxa", categoria: "Carnes e Aves", estoqueAtual: 0, estoqueMinimo: 2, unidade: "kg", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Moida Suina", categoria: "Carnes e Aves", estoqueAtual: 0, estoqueMinimo: 1, unidade: "kg", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "File de Frango / Sassami", categoria: "Carnes e Aves", estoqueAtual: 1, estoqueMinimo: 2, unidade: "kg", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Limpa Aluminio", categoria: "Limpeza e Lavanderia", estoqueAtual: 1, estoqueMinimo: 1, unidade: "un", comprar: false, preco: 0, marca: "", pegou: "", tipo: "Extra" },
-      { nome: "Sapólio", categoria: "Limpeza e Lavanderia", estoqueAtual: 0, estoqueMinimo: 1, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Extra" },
-      { nome: "Flocão de milho", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 2, unidade: "pacote", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Milho em conserva", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 2, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Extra" },
-      { nome: "Perfex", categoria: "Limpeza e Lavanderia", estoqueAtual: 1, estoqueMinimo: 2, unidade: "pacote", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Vinagre de alcool", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 1, unidade: "L", comprar: false, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Sal Marinho", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 1, unidade: "kg", comprar: false, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Papel Manteiga", categoria: "Descartáveis e Utensílios", estoqueAtual: 0, estoqueMinimo: 1, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Extra" },
-      { nome: "Film PVC", categoria: "Descartáveis e Utensílios", estoqueAtual: 0, estoqueMinimo: 1, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Extra" },
-      { nome: "Papel Toalha", categoria: "Descartáveis e Utensílios", estoqueAtual: 1, estoqueMinimo: 2, unidade: "pacote", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Fermento dr Oetker", categoria: "Mercearia e Grãos", estoqueAtual: 0, estoqueMinimo: 1, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Extra" },
-      { nome: "Farinha de Mandioca", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 1, unidade: "kg", comprar: false, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Sabonete Thiago", categoria: "Higiene Pessoal", estoqueAtual: 1, estoqueMinimo: 2, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Papel Higiênico", categoria: "Higiene Pessoal", estoqueAtual: 2, estoqueMinimo: 4, unidade: "pacote", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Palha de Aço", categoria: "Limpeza e Lavanderia", estoqueAtual: 1, estoqueMinimo: 2, unidade: "pacote", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Esponja", categoria: "Limpeza e Lavanderia", estoqueAtual: 2, estoqueMinimo: 3, unidade: "pacote", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
-      { nome: "Lava Roupas Líquido 5L", categoria: "Limpeza e Lavanderia", estoqueAtual: 0, estoqueMinimo: 1, unidade: "L", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" }
-    ];
-
-    let usuarioAtual = localStorage.getItem('usuario_compras') || '';
-    let meusItens = JSON.parse(localStorage.getItem('itens_estoque_full')) || itensIniciais;
-    let historicoCompras = JSON.parse(localStorage.getItem('historico_compras')) || [];
-
-    window.onload = function() {
-      if (!usuarioAtual) {
-        document.getElementById('modal-usuario').classList.remove('hidden');
-      } else {
-        document.getElementById('lbl-usuario').innerText = usuarioAtual;
-      }
-      renderizarTelas();
-    };
-
-    function renderizarTelas() {
-      renderizarEstoque();
-      renderizarComprar();
-      renderizarMercado();
-      renderizarHistorico();
-      lucide.createIcons();
-    }
-
-    // 1. ABA ESTOQUE (COM BOTÕES RÁPIDOS + / -)
-    function renderizarEstoque() {
-      const container = document.getElementById('lista-estoque');
-      const busca = document.getElementById('busca-estoque').value.toLowerCase();
-      container.innerHTML = '';
-
-      const grupos = {};
-      meusItens.forEach((item, index) => {
-        if (busca && !item.nome.toLowerCase().includes(busca)) return;
-        if (!grupos[item.categoria]) grupos[item.categoria] = [];
-        grupos[item.categoria].push({ ...item, origIndex: index });
-      });
-
-      for (const [cat, lista] of Object.entries(grupos)) {
-        const sec = document.createElement('div');
-        sec.className = 'bg-slate-800 border border-slate-700/80 rounded-xl overflow-hidden';
-        
-        let htmlItens = '';
-        lista.forEach(item => {
-          const repor = item.estoqueAtual <= item.estoqueMinimo;
-          htmlItens += `
-            <div class="p-3 border-b border-slate-700/50 last:border-b-0 flex items-center justify-between">
-              <div class="flex-1 pr-2">
-                <div class="flex items-center gap-1.5">
-                  <span class="font-medium text-sm text-slate-100">${item.nome}</span>
-                  ${repor ? '<span class="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-1 py-0.5 rounded">Repor</span>' : ''}
-                </div>
-                <div class="text-xs text-slate-400">Mín: ${item.estoqueMinimo} ${item.unidade}</div>
-              </div>
-
-              <!-- Ajuste Rápido de Estoque -->
-              <div class="flex items-center bg-slate-900 border border-slate-700 rounded-lg p-1 space-x-1">
-                <button onclick="alterarEstoque(${item.origIndex}, -1)" class="w-7 h-7 bg-slate-800 hover:bg-slate-700 rounded text-slate-200 font-bold flex items-center justify-center">-</button>
-                <div class="px-2 text-center min-w-[2.2rem]">
-                  <span class="font-bold text-sm text-emerald-400">${item.estoqueAtual}</span>
-                </div>
-                <button onclick="alterarEstoque(${item.origIndex}, 1)" class="w-7 h-7 bg-slate-800 hover:bg-slate-700 rounded text-slate-200 font-bold flex items-center justify-center">+</button>
-              </div>
-
-              <button onclick="abrirModalItem(${item.origIndex})" class="ml-2 text-slate-500 hover:text-slate-300 p-1">
-                <i data-lucide="edit-2" class="w-4 h-4"></i>
-              </button>
-            </div>
-          `;
-        });
-
-        sec.innerHTML = `
-          <div class="bg-slate-700/40 p-2.5 px-3 text-xs font-bold text-slate-300 flex justify-between">
-            <span>${cat}</span>
-            <span class="text-slate-400 font-normal">(${lista.length})</span>
-          </div>
-          <div>${htmlItens}</div>
-        `;
-        container.appendChild(sec);
-      }
-    }
-
-    function alterarEstoque(index, delta) {
-      if (meusItens[index].estoqueAtual + delta >= 0) {
-        meusItens[index].estoqueAtual += delta;
-        if (meusItens[index].estoqueAtual <= meusItens[index].estoqueMinimo) {
-          meusItens[index].comprar = true;
-        }
-        salvarDados();
-        renderizarTelas();
-      }
-    }
-
-    // 2. ABA A COMPRAR
-    function renderizarComprar() {
-      const container = document.getElementById('lista-comprar');
-      container.innerHTML = '';
-
-      meusItens.forEach((item, index) => {
-        const precisa = item.estoqueAtual <= item.estoqueMinimo;
-        const card = document.createElement('div');
-        card.className = 'bg-slate-800 border border-slate-700/80 p-3 rounded-lg flex items-center justify-between';
-        
-        card.innerHTML = `
-          <div>
-            <span class="font-medium text-sm text-slate-100">${item.nome}</span>
-            <div class="text-xs text-slate-400">Sugestão: comprar ${(item.estoqueMinimo - item.estoqueAtual) > 0 ? (item.estoqueMinimo - item.estoqueAtual) : 1} ${item.unidade}</div>
-          </div>
-          <label class="flex items-center gap-2 text-xs font-medium text-slate-300 cursor-pointer">
-            <span>Comprar?</span>
-            <input type="checkbox" ${item.comprar ? 'checked' : ''} onchange="toggleComprar(${index})" class="w-5 h-5 accent-emerald-500 rounded">
-          </label>
-        `;
-        container.appendChild(card);
-      });
-    }
-
-    function toggleComprar(index) {
-      meusItens[index].comprar = !meusItens[index].comprar;
-      salvarDados();
-      renderizarTelas();
-    }
-
-    // 3. ABA MERCADO
-    function renderizarMercado() {
-      const container = document.getElementById('lista-mercado');
-      container.innerHTML = '';
-
-      let totalObr = 0;
-      let totalExt = 0;
-
-      meusItens.forEach((item, index) => {
-        if (!item.comprar) return;
-
-        const totalItem = (item.preco || 0) * 1;
-        if (item.tipo === 'Obrigatório') totalObr += totalItem;
-        else totalExt += totalItem;
-
-        const card = document.createElement('div');
-        card.className = 'bg-slate-800 border border-slate-700/80 p-3 rounded-xl space-y-2';
-
-        card.innerHTML = `
-          <div class="flex items-center justify-between">
-            <span class="font-bold text-sm text-slate-100">${item.nome}</span>
-            <button onclick="marcarEuPego(${index})" class="text-[10px] px-2 py-0.5 rounded-full border ${item.pegou ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-slate-700 text-slate-400 border-slate-600'}">
-              ${item.pegou ? 'Pego por: ' + item.pegou : 'Eu Pego!'}
-            </button>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2 text-xs">
-            <div>
-              <label class="text-slate-400">Preço Un (R$)</label>
-              <input type="number" step="0.01" value="${item.preco || ''}" onchange="atualizarPreco(${index}, this.value)" placeholder="0,00" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-slate-100">
+    <!-- Top Header -->
+    <header class="sticky top-0 z-30 bg-darkCard/95 backdrop-blur-md border-b border-darkBorder px-4 py-3 flex items-center justify-between shadow-md">
+        <div class="flex items-center gap-2">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brandPrimary to-brandSecondary flex items-center justify-center text-slate-900 font-bold text-xl shadow-lg">
+                <i class="fa-solid fa-cart-shopping text-white text-base"></i>
             </div>
             <div>
-              <label class="text-slate-400">Marca (Opcional)</label>
-              <input type="text" value="${item.marca || ''}" onchange="atualizarMarca(${index}, this.value)" placeholder="Ex: Nestlé" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-slate-100">
+                <h1 class="text-base font-bold text-white leading-tight">MercadoControl</h1>
+                <p id="sharedStatusBadge" class="text-[10px] text-slate-400 flex items-center gap-1">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span id="userNameDisplay">Usuário</span>
+                </p>
             </div>
-          </div>
+        </div>
 
-          <div class="flex justify-between items-center text-xs pt-1 border-t border-slate-700/50">
-            <button onclick="toggleTipo(${index})" class="text-[11px] font-semibold ${item.tipo === 'Obrigatório' ? 'text-emerald-400' : 'text-amber-400'}">
-              ${item.tipo} (Clique p/ mudar)
+        <div class="flex items-center gap-2">
+            <button onclick="openShareModal()" class="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white border border-darkBorder text-xs flex items-center gap-1.5 active:scale-95 transition-all">
+                <i class="fa-solid fa-share-nodes text-brandSecondary"></i>
+                <span class="hidden sm:inline">Compartilhar</span>
             </button>
-            <span class="font-bold text-slate-200">Total: R$ ${totalItem.toFixed(2)}</span>
-          </div>
-        `;
-        container.appendChild(card);
-      });
+            <button onclick="openProfileModal()" class="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white border border-darkBorder text-xs active:scale-95 transition-all">
+                <i class="fa-solid fa-user-gear"></i>
+            </button>
+        </div>
+    </header>
 
-      document.getElementById('total-obrigat').innerText = `R$ ${totalObr.toFixed(2)}`;
-      document.getElementById('total-extra').innerText = `R$ ${totalExt.toFixed(2)}`;
-      document.getElementById('total-geral').innerText = `R$ ${(totalObr + totalExt).toFixed(2)}`;
-    }
+    <!-- Main Content Area -->
+    <main class="flex-1 max-w-2xl w-full mx-auto p-4 space-y-4">
 
-    function atualizarPreco(index, val) {
-      meusItens[index].preco = parseFloat(val) || 0;
-      salvarDados();
-      renderizarMercado();
-    }
+        <!-- Toast Notifications Banner -->
+        <div id="liveAlertBanner" class="hidden bg-brandSecondary/20 border border-brandSecondary text-blue-200 p-3 rounded-xl flex items-center justify-between text-xs animate-bounce">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-bell text-brandSecondary text-sm"></i>
+                <span id="liveAlertText">Sua lista foi atualizada por outro colaborador!</span>
+            </div>
+            <button onclick="hideLiveAlert()" class="text-slate-400 hover:text-white font-bold p-1">&times;</button>
+        </div>
 
-    function atualizarMarca(index, val) {
-      meusItens[index].marca = val;
-      salvarDados();
-    }
+        <!-- 1. TAB ESTOQUE (HOME) -->
+        <section id="tab-estoque" class="tab-content space-y-4">
+            <!-- Search & Actions -->
+            <div class="flex gap-2">
+                <div class="relative flex-1">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input type="text" id="searchStock" oninput="renderEstoque()" placeholder="Buscar item no estoque..." class="w-full bg-slate-800/80 border border-darkBorder rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brandPrimary transition-all">
+                </div>
+                <button onclick="openItemModal()" class="bg-brandPrimary hover:bg-brandPrimaryHover text-white px-3 py-2.5 rounded-xl font-semibold text-xs flex items-center gap-1.5 shadow-lg shadow-brandPrimary/20 active:scale-95 transition-all shrink-0">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Novo Item</span>
+                </button>
+            </div>
 
-    function toggleTipo(index) {
-      meusItens[index].tipo = meusItens[index].tipo === 'Obrigatório' ? 'Extra' : 'Obrigatório';
-      salvarDados();
-      renderizarMercado();
-    }
+            <!-- Dashboard Summary Quick Stats -->
+            <div class="grid grid-cols-3 gap-2 text-center">
+                <div class="bg-darkCard p-2.5 rounded-xl border border-darkBorder">
+                    <span class="text-[10px] text-slate-400 block uppercase font-medium">Total Itens</span>
+                    <span id="statTotalItems" class="text-base font-bold text-white">0</span>
+                </div>
+                <div class="bg-darkCard p-2.5 rounded-xl border border-darkBorder">
+                    <span class="text-[10px] text-amber-400 block uppercase font-medium">Estoque Baixo</span>
+                    <span id="statLowStock" class="text-base font-bold text-amber-400">0</span>
+                </div>
+                <div class="bg-darkCard p-2.5 rounded-xl border border-darkBorder">
+                    <span class="text-[10px] text-emerald-400 block uppercase font-medium">Para Comprar</span>
+                    <span id="statToBuy" class="text-base font-bold text-emerald-400">0</span>
+                </div>
+            </div>
 
-    function marcarEuPego(index) {
-      meusItens[index].pegou = meusItens[index].pegou ? '' : (usuarioAtual || 'Alguém');
-      salvarDados();
-      renderizarMercado();
-    }
+            <!-- Categories Accordion List -->
+            <div id="stockCategoriesContainer" class="space-y-3">
+                <!-- Dynamically populated -->
+            </div>
+        </section>
 
-    function finalizarCompra() {
-      const itensComprados = meusItens.filter(i => i.comprar);
-      if (itensComprados.length === 0) return alert("Nenhum item selecionado para compra.");
+        <!-- 2. TAB LISTA / COMPRAS (MODO MERCADO) -->
+        <section id="tab-compras" class="tab-content hidden space-y-4">
+            
+            <!-- Quick Add Extra Item During Shopping -->
+            <div class="bg-darkCard p-3 rounded-2xl border border-darkBorder space-y-2">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-basket-shopping text-brandAccent"></i> Adicionar Item Extra no Mercado
+                    </h2>
+                </div>
+                <div class="flex gap-2">
+                    <input type="text" id="extraItemName" placeholder="Nome do item extra (ex: Chocolates)..." class="flex-1 bg-slate-800 border border-darkBorder rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brandAccent">
+                    <button onclick="addExtraShoppingItem()" class="bg-brandAccent text-slate-900 font-bold px-3 py-2 rounded-xl text-xs hover:bg-amber-400 active:scale-95 transition-all">
+                        <i class="fa-solid fa-plus"></i> Adicionar
+                    </button>
+                </div>
+            </div>
 
-      const registro = {
-        data: new Date().toLocaleDateString('pt-BR'),
-        comprador: usuarioAtual || 'Anônimo',
-        total: document.getElementById('total-geral').innerText,
-        itens: itensComprados.map(i => `${i.nome} (${i.marca || 'S/M'}) - R$ ${i.preco}`)
-      };
+            <!-- Shopping Filters -->
+            <div class="flex items-center justify-between text-xs px-1">
+                <span class="text-slate-400 font-medium">Lista de Compras Ativa</span>
+                <div class="flex gap-2">
+                    <button onclick="filterShoppingList('all')" id="btnFilterAll" class="px-2.5 py-1 rounded-lg bg-slate-800 border border-darkBorder text-white text-[11px]">Todos</button>
+                    <button onclick="filterShoppingList('obrigatorio')" id="btnFilterReq" class="px-2.5 py-1 rounded-lg bg-slate-800 border border-darkBorder text-slate-400 text-[11px]">Obrigatórios</button>
+                    <button onclick="filterShoppingList('extra')" id="btnFilterExtra" class="px-2.5 py-1 rounded-lg bg-slate-800 border border-darkBorder text-slate-400 text-[11px]">Extras</button>
+                </div>
+            </div>
 
-      historicoCompras.unshift(registro);
+            <!-- Shopping Items List -->
+            <div id="shoppingListContainer" class="space-y-3">
+                <!-- Dynamically populated -->
+            </div>
 
-      // Atualiza o estoque somando o que foi comprado
-      meusItens.forEach(item => {
-        if (item.comprar) {
-          item.estoqueAtual += 1;
-          item.comprar = false;
+            <!-- Empty State -->
+            <div id="emptyShoppingState" class="hidden text-center py-10 bg-darkCard/50 rounded-2xl border border-dashed border-darkBorder p-6">
+                <i class="fa-solid fa-cart-flatbed text-4xl text-slate-600 mb-3"></i>
+                <p class="text-sm font-semibold text-slate-300">Nenhum item marcado para comprar!</p>
+                <p class="text-xs text-slate-500 mt-1">Ajuste seu estoque na página inicial ou adicione itens extras aqui.</p>
+            </div>
+        </section>
+
+        <!-- 3. TAB HISTÓRICO DE COMPRAS -->
+        <section id="tab-historico" class="tab-content hidden space-y-4">
+            <div class="flex items-center justify-between">
+                <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left text-brandSecondary"></i> Histórico de Compras Realizadas
+                </h2>
+                <button onclick="clearHistory()" class="text-xs text-rose-400 hover:underline">Limpar Histórico</button>
+            </div>
+
+            <div id="historyListContainer" class="space-y-3">
+                <!-- Dynamically populated -->
+            </div>
+
+            <div id="emptyHistoryState" class="hidden text-center py-10 bg-darkCard/50 rounded-2xl border border-dashed border-darkBorder p-6">
+                <i class="fa-solid fa-receipt text-4xl text-slate-600 mb-3"></i>
+                <p class="text-sm font-semibold text-slate-300">Nenhuma compra finalizada ainda.</p>
+                <p class="text-xs text-slate-500 mt-1">Ao concluir suas compras no mercado, elas aparecerão gravadas aqui.</p>
+            </div>
+        </section>
+
+        <!-- 4. TAB ATIVIDADES & COLABORAÇÃO -->
+        <section id="tab-atividades" class="tab-content hidden space-y-4">
+            <div class="bg-darkCard p-4 rounded-2xl border border-darkBorder space-y-3">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-users text-emerald-400"></i> Sessão de Colaboração
+                    </h2>
+                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Ativa</span>
+                </div>
+                <p class="text-xs text-slate-400">
+                    O aplicativo utiliza um canal direto local e via sincronização JSON de sessão para permitir que múltiplos aparelhos visualizem as pegadas e alterações da lista no mercado.
+                </p>
+                <div class="p-3 bg-slate-900 rounded-xl border border-darkBorder flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] text-slate-500 block uppercase">Seu Nome Cadastrado</span>
+                        <span id="collabCurrentUserName" class="text-xs font-bold text-white">Carregando...</span>
+                    </div>
+                    <button onclick="openProfileModal()" class="text-xs text-brandSecondary font-medium hover:underline">Alterar Nome</button>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-list-check"></i> Histórico de Edições em Tempo Real
+                </h3>
+                <div id="activitiesContainer" class="space-y-2">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FIXED BOTTOM BAR ON SHOPPING TAB (FINALIZE & TOTALS) -->
+    <div id="shoppingFooterBar" class="hidden fixed bottom-16 left-0 right-0 z-20 bg-darkCard/95 backdrop-blur-lg border-t border-darkBorder p-3 shadow-2xl">
+        <div class="max-w-2xl mx-auto space-y-2">
+            <!-- Totals Summary Grid -->
+            <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                <div class="bg-slate-900/80 p-1.5 rounded-lg border border-darkBorder">
+                    <span class="text-[9px] text-slate-400 block">Obrigatórios</span>
+                    <span id="footerTotalReq" class="font-bold text-emerald-400">R$ 0,00</span>
+                </div>
+                <div class="bg-slate-900/80 p-1.5 rounded-lg border border-darkBorder">
+                    <span class="text-[9px] text-slate-400 block">Extras</span>
+                    <span id="footerTotalExtra" class="font-bold text-amber-400">R$ 0,00</span>
+                </div>
+                <div class="bg-emerald-950/60 p-1.5 rounded-lg border border-emerald-500/40">
+                    <span class="text-[9px] text-emerald-300 block font-semibold">TOTAL GERAL</span>
+                    <span id="footerTotalAll" class="font-bold text-emerald-300 text-sm">R$ 0,00</span>
+                </div>
+            </div>
+            <!-- Finalize Button -->
+            <button onclick="finalizarCompra()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 active:scale-[0.98] transition-all">
+                <i class="fa-solid fa-check-double text-sm"></i> Finalizar Compra e Atualizar Estoque
+            </button>
+        </div>
+    </div>
+
+    <!-- NAVIGATION BOTTOM BAR -->
+    <nav class="fixed bottom-0 left-0 right-0 z-30 bg-darkCard border-t border-darkBorder px-2 py-2 shadow-2xl">
+        <div class="max-w-2xl mx-auto grid grid-cols-4 gap-1">
+            <button onclick="switchTab('estoque')" id="nav-estoque" class="nav-btn flex flex-col items-center justify-center py-1 text-brandPrimary font-medium transition-all">
+                <i class="fa-solid fa-boxes-stacked text-lg"></i>
+                <span class="text-[10px] mt-0.5">Estoque</span>
+            </button>
+            <button onclick="switchTab('compras')" id="nav-compras" class="nav-btn flex flex-col items-center justify-center py-1 text-slate-400 hover:text-slate-200 transition-all relative">
+                <i class="fa-solid fa-cart-shopping text-lg"></i>
+                <span class="text-[10px] mt-0.5">Compras</span>
+                <span id="navCartBadge" class="hidden absolute top-0 right-4 w-4 h-4 bg-emerald-500 text-slate-950 font-bold text-[9px] rounded-full flex items-center justify-center">0</span>
+            </button>
+            <button onclick="switchTab('historico')" id="nav-historico" class="nav-btn flex flex-col items-center justify-center py-1 text-slate-400 hover:text-slate-200 transition-all">
+                <i class="fa-solid fa-clock-rotate-left text-lg"></i>
+                <span class="text-[10px] mt-0.5">Histórico</span>
+            </button>
+            <button onclick="switchTab('atividades')" id="nav-atividades" class="nav-btn flex flex-col items-center justify-center py-1 text-slate-400 hover:text-slate-200 transition-all">
+                <i class="fa-solid fa-users text-lg"></i>
+                <span class="text-[10px] mt-0.5">Atividades</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- MODAL: CADASTRAR / EDITAR ITEM -->
+    <div id="modalItem" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in">
+        <div class="bg-darkCard w-full max-w-lg rounded-t-3xl sm:rounded-2xl border border-darkBorder p-5 space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div class="flex items-center justify-between border-b border-darkBorder pb-3">
+                <h3 id="modalItemTitle" class="text-sm font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square text-brandPrimary"></i> Cadastrar / Editar Item
+                </h3>
+                <button onclick="closeItemModal()" class="text-slate-400 hover:text-white p-1 text-lg">&times;</button>
+            </div>
+
+            <form id="itemForm" onsubmit="handleSaveItem(event)" class="space-y-3 text-xs">
+                <input type="hidden" id="formItemId">
+
+                <!-- Nome do Item (Com Dropdown de Seleção / Cadastro) -->
+                <div>
+                    <label class="block text-slate-400 mb-1 font-medium">Nome do Produto</label>
+                    <input type="text" id="formItemName" list="presetNamesList" required placeholder="Digite ou selecione o produto..." class="w-full bg-slate-800 border border-darkBorder rounded-xl p-2.5 text-white focus:border-brandPrimary focus:outline-none">
+                    <datalist id="presetNamesList"></datalist>
+                </div>
+
+                <!-- Categoria -->
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-slate-400 mb-1 font-medium">Categoria</label>
+                        <input type="text" id="formCategory" list="presetCategoriesList" required placeholder="Ex: Alimentos básicos" class="w-full bg-slate-800 border border-darkBorder rounded-xl p-2.5 text-white focus:border-brandPrimary focus:outline-none">
+                        <datalist id="presetCategoriesList"></datalist>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1 font-medium">Unidade de Medida</label>
+                        <select id="formUnit" class="w-full bg-slate-800 border border-darkBorder rounded-xl p-2.5 text-white focus:border-brandPrimary focus:outline-none">
+                            <option value="un">Unidade (un)</option>
+                            <option value="kg">Quilo (kg)</option>
+                            <option value="litro">Litro (L)</option>
+                            <option value="pacote">Pacote (pct)</option>
+                            <option value="caixa">Caixa (cx)</option>
+                            <option value="lata">Lata</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Marca Sugerida -->
+                <div>
+                    <label class="block text-slate-400 mb-1 font-medium">Marca Sugerida (Opcional)</label>
+                    <input type="text" id="formBrand" placeholder="Ex: Tio João, Nestlé..." class="w-full bg-slate-800 border border-darkBorder rounded-xl p-2.5 text-white focus:border-brandPrimary focus:outline-none">
+                </div>
+
+                <!-- Estoques -->
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-slate-400 mb-1 font-medium">Estoque Mínimo (Alerta)</label>
+                        <input type="number" id="formMinStock" min="0" step="any" required value="1" class="w-full bg-slate-800 border border-darkBorder rounded-xl p-2.5 text-white focus:border-brandPrimary focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1 font-medium">Estoque Atual em Casa</label>
+                        <input type="number" id="formCurrentStock" min="0" step="any" required value="0" class="w-full bg-slate-800 border border-darkBorder rounded-xl p-2.5 text-white focus:border-brandPrimary focus:outline-none">
+                    </div>
+                </div>
+
+                <!-- Opção Comprar e Classificação -->
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                    <div>
+                        <label class="block text-slate-400 mb-1 font-medium">Comprar?</label>
+                        <select id="formToBuy" class="w-full bg-slate-800 border border-darkBorder rounded-xl p-2.5 text-white focus:border-brandPrimary focus:outline-none">
+                            <option value="sim">Sim (Incluir na Lista)</option>
+                            <option value="nao">Não</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1 font-medium">Classificação</label>
+                        <select id="formPriority" class="w-full bg-slate-800 border border-darkBorder rounded-xl p-2.5 text-white focus:border-brandPrimary focus:outline-none">
+                            <option value="obrigatorio">Obrigatório</option>
+                            <option value="extra">Extra / Opcional</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex gap-2 pt-3">
+                    <button type="button" onclick="closeItemModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2.5 rounded-xl">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-brandPrimary hover:bg-brandPrimaryHover text-white font-bold py-2.5 rounded-xl shadow-lg shadow-brandPrimary/20">Salvar Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: NOME DO USUÁRIO & BACKUP JSON -->
+    <div id="modalProfile" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-darkCard w-full max-w-md rounded-2xl border border-darkBorder p-5 space-y-4 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-darkBorder pb-3">
+                <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-user-gear text-brandSecondary"></i> Perfil & Gestão de Dados (GitHub)
+                </h3>
+                <button onclick="closeProfileModal()" class="text-slate-400 hover:text-white p-1 text-lg">&times;</button>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-400 mb-1 font-medium">Seu Nome / Identificação Colaborativa</label>
+                    <input type="text" id="profileUserNameInput" placeholder="Digite seu nome..." class="w-full bg-slate-800 border border-darkBorder rounded-xl p-2.5 text-white focus:border-brandSecondary focus:outline-none">
+                </div>
+                <button onclick="saveUserName()" class="w-full bg-brandSecondary hover:bg-blue-600 text-white font-bold py-2 rounded-xl">
+                    Atualizar Meu Nome
+                </button>
+
+                <hr class="border-darkBorder my-3">
+
+                <div>
+                    <h4 class="font-bold text-slate-200 mb-1">Exportar / Importar Dados (JSON Backup)</h4>
+                    <p class="text-[11px] text-slate-400 mb-2">Mantenha seus dados do usuário 100% separados do código fonte. Exporte para salvar no GitHub Gist ou fazer backup.</p>
+                    <div class="flex gap-2">
+                        <button onclick="exportUserDataJSON()" class="flex-1 bg-slate-800 hover:bg-slate-700 border border-darkBorder text-slate-200 py-2 rounded-xl flex items-center justify-center gap-1.5 font-semibold">
+                            <i class="fa-solid fa-download text-emerald-400"></i> Exportar
+                        </button>
+                        <label class="flex-1 bg-slate-800 hover:bg-slate-700 border border-darkBorder text-slate-200 py-2 rounded-xl flex items-center justify-center gap-1.5 font-semibold cursor-pointer">
+                            <i class="fa-solid fa-upload text-brandSecondary"></i> Importar
+                            <input type="file" id="importJsonFile" accept=".json" onchange="importUserDataJSON(event)" class="hidden">
+                        </label>
+                    </div>
+                </div>
+
+                <hr class="border-darkBorder my-3">
+
+                <div>
+                    <button onclick="resetToDefaultData()" class="w-full bg-rose-900/40 hover:bg-rose-900/60 border border-rose-700/50 text-rose-300 font-semibold py-2 rounded-xl text-xs flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-rotate-left"></i> Restaurar Estoque Padrão Original
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: COMPARTILHAMENTO & CÓDIGO SECRETO -->
+    <div id="modalShare" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-darkCard w-full max-w-md rounded-2xl border border-darkBorder p-5 space-y-4 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-darkBorder pb-3">
+                <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-share-nodes text-brandSecondary"></i> Compartilhar Lista Colaborativa
+                </h3>
+                <button onclick="closeShareModal()" class="text-slate-400 hover:text-white p-1 text-lg">&times;</button>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <p class="text-slate-300 leading-relaxed">
+                    Envie este link com código secreto para seus familiares ou acompanhantes no mercado. Quem acessar com o link poderá visualizar, marcar "Eu pego" e editar a lista em tempo real.
+                </p>
+
+                <div class="bg-slate-900 p-3 rounded-xl border border-darkBorder space-y-1">
+                    <span class="text-[10px] text-slate-500 uppercase block font-semibold">Link de Acesso Direto</span>
+                    <div class="flex gap-2 items-center">
+                        <input type="text" id="shareUrlInput" readonly class="w-full bg-transparent text-emerald-400 font-mono text-[11px] outline-none">
+                        <button onclick="copyShareLink()" class="bg-brandSecondary text-white px-3 py-1.5 rounded-lg font-bold shrink-0 hover:bg-blue-600 active:scale-95">
+                            Copiar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-emerald-950/40 border border-emerald-500/30 p-3 rounded-xl text-emerald-200 text-[11px] flex items-start gap-2">
+                    <i class="fa-solid fa-shield-halved text-emerald-400 text-sm mt-0.5"></i>
+                    <div>
+                        <strong class="block">Código Secreto Ativo: <span id="shareSecretCode" class="font-mono text-white">MERCADO-789</span></strong>
+                        Somente pessoas com este código secreto no link conseguirão abrir suas informações de compra.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- JAVASCRIPT APP LOGIC -->
+    <script>
+        /* ==========================================================================
+           2. CATÁLOGO PADRÃO DE ITENS (defaultCatalog) - TOTALMENTE SEPARADO
+           ========================================================================== */
+        const defaultCatalog = [
+            // Alimentos básicos
+            { id: 'def_1', name: 'Arroz', category: 'Alimentos básicos', unit: 'kg', minStock: 2, currentStock: 1, brand: 'Tio João', toBuy: 'sim', priority: 'obrigatorio' },
+            { id: 'def_2', name: 'Feijão', category: 'Alimentos básicos', unit: 'kg', minStock: 2, currentStock: 2, brand: 'Kicaldo', toBuy: 'nao', priority: 'obrigatorio' },
+            { id: 'def_3', name: 'Açúcar', category: 'Alimentos básicos', unit: 'kg', minStock: 1, currentStock: 0, brand: 'União', toBuy: 'sim', priority: 'obrigatorio' },
+            { id: 'def_4', name: 'Sal marinho', category: 'Alimentos básicos', unit: 'un', minStock: 1, currentStock: 1, brand: '', toBuy: 'nao', priority: 'obrigatorio' },
+            { id: 'def_5', name: 'Farinha de trigo', category: 'Alimentos básicos', unit: 'kg', minStock: 1, currentStock: 0, brand: 'Dona Benta', toBuy: 'sim', priority: 'obrigatorio' },
+            { id: 'def_6', name: 'Farinha de mandioca', category: 'Alimentos básicos', unit: 'pacote', minStock: 1, currentStock: 1, brand: '', toBuy: 'nao', priority: 'obrigatorio' },
+            { id: 'def_7', name: 'Flocão de milho', category: 'Alimentos básicos', unit: 'pacote', minStock: 2, currentStock: 0, brand: 'Maratá', toBuy: 'sim', priority: 'obrigatorio' },
+            { id: 'def_8', name: 'Macarrão espaguete', category: 'Alimentos básicos', unit: 'pacote', minStock: 2, currentStock: 1, brand: 'Adria', toBuy: 'sim', priority: 'obrigatorio' },
+            { id: 'def_9', name: 'Macarrão penne ou parafuso', category: 'Alimentos básicos', unit: 'pacote', minStock: 1, currentStock: 1, brand: '', toBuy: 'nao', priority: 'extra' },
+            { id: 'def_10', name: 'Molho de tomate', category: 'Alimentos básicos', unit: 'pacote', minStock: 3, currentStock: 1, brand: 'Quero', toBuy: 'sim', priority: 'obrigatorio' },
+            { id: 'def_11', name: 'Óleo', category: 'Alimentos básicos', unit: 'un', minStock: 2, currentStock: 1, brand: 'Liza', toBuy: 'sim', priority: 'obrigatorio' },
+            { id: 'def_12', name: 'Vinagre de álcool', category: 'Alimentos básicos', unit: 'un', minStock: 1, currentStock: 1, brand: 'Castelo', toBuy: 'nao', priority: 'obrigatorio' },
+
+            // Café, bebidas e conservas
+            { id: 'def_13', name: 'Café', category: 'Café, bebidas e conservas', unit: 'pacote', minStock: 2, currentStock: 0, brand: 'Pilão', toBuy: 'sim', priority: 'obrigatorio' },
+            { id: 'def_14', name: 'Suco', category: 'Café, bebidas e conservas', unit: 'caixa', minStock: 3, currentStock: 1, brand: 'Del Valle', toBuy: 'sim', priority: 'extra' },
+            { id: 'def_15', name: 'Leite em pó', category: 'Café, bebidas e conservas', unit: 'lata', minStock: 1, currentStock: 1, brand: 'Ninho', toBuy: 'nao', priority: 'obrigatorio' },
+            { id: 'def_16', name: 'Sardinha em lata', category: 'Café, bebidas e conservas', unit: 'lata', minStock: 2, currentStock: 0, brand: 'Gomes da Costa', toBuy: 'sim', priority: 'extra' },
+            { id: 'def_17', name: 'Milho em conserva', category: 'Café, bebidas e conservas', unit: 'lata', minStock: 2, currentStock: 2, brand: 'Fugini', toBuy: 'nao', priority: 'extra' },
+
+            // Gelados e proteínas
+            { id: 'def_18', name: 'Coxa', category: 'Gelados e proteínas', unit: 'kg', minStock: 2, currentStock: 1, brand: 'Sadia', toBuy: 'sim', priority: 'obrigatorio' },
+            { id: 'def_19', name: 'Sobrecoxa', category: 'Gelados e proteínas', unit: 'kg', minStock: 2, currentStock: 0, brand: 'Seara', toBuy: 'sim', priority: 'obrigatorio' },
+            { id: 'def_20', name: 'Moída suína', category: 'Gelados e proteínas', unit: 'kg', minStock: 1, currentStock: 0, brand: '', toBuy: 'sim', priority: 'obrigatorio' },
+            { id: 'def_21', name: 'Filé de frango / sassami', category: 'Gelados e proteínas', unit: 'kg', minStock: 2, currentStock: 1, brand: '', toBuy: 'sim', priority: 'obrigatorio' },
+            { id: 'def_22', name: 'Hambúrguer tradicional', category: 'Gelados e proteínas', unit: 'pacote', minStock: 1, currentStock: 1, brand: 'Texas', toBuy: 'nao', priority: 'extra' },
+            { id: 'def_23', name: 'Hambúrguer 180g', category: 'Gelados e proteínas', unit: 'pacote', minStock: 1, currentStock: 0, brand: 'Gourmet', toBuy: 'sim', priority: 'extra' },
+            { id: 'def_24', name: 'Batata palito congelada', category: 'Gelados e proteínas', unit: 'pacote', minStock: 1, currentStock: 0, brand: 'McCain', toBuy: 'sim', priority: 'extra' },
+
+            // Laticínios e pães
+            { id: 'def_25', name: 'Leite condensado', category: 'Laticínios e pães', unit: 'un', minStock: 2, currentStock: 1, brand: 'Moça', toBuy: 'sim', priority: 'extra' },
+            { id: 'def_26', name: 'Creme de leite', category: 'Laticínios e pães', unit: 'un', minStock: 2, currentStock: 2, brand: 'Nestlé', toBuy: 'nao', priority: 'obrigatorio' },
+            { id: 'def_27', name: 'Requeijão', category: 'Laticínios e pães', unit: 'un', minStock: 1, currentStock: 0, brand: 'Vigor', toBuy: 'sim', priority: 'obrigatorio' },
+            { id: 'def_28', name: 'Queijo ralado', category: 'Laticínios e pães', unit: 'pacote', minStock: 2, currentStock: 0, brand: 'Parmalat', toBuy: 'sim', priority: 'extra' },
+            { id: 'def_29', name: 'Queijo fatiado', category: 'Laticínios e pães', unit: 'pacote', minStock: 1, currentStock: 0, brand: 'Presidente', toBuy: 'sim', priority: 'obrigatorio' },
+            { id: 'def_30', name: 'Presunto fatiado', category: 'Laticínios e pães', unit: 'pacote', minStock: 1, currentStock: 1, brand: 'Sadia', toBuy: 'nao', priority: 'obrigatorio' },
+            { id: 'def_31', name: 'Ovos', category: 'Laticínios e pães', unit: 'pacote', minStock: 1, currentStock: 0, brand: 'Macafe', toBuy: 'sim', priority: 'obrigatorio' },
+            { id: 'def_32', name: 'Pão de forma', category: 'Laticínios e pães', unit: 'pacote', minStock: 1, currentStock: 0, brand: 'Wickbold', toBuy: 'sim', priority: 'obrigatorio' },
+            { id: 'def_33', name: 'Maionese tradicional', category: 'Laticínios e pães', unit: 'un', minStock: 1, currentStock: 1, brand: 'Hellmanns', toBuy: 'nao', priority: 'extra' },
+            { id: 'def_34', name: 'Ketchup', category: 'Laticínios e pães', unit: 'un', minStock: 1, currentStock: 0, brand: 'Heinz', toBuy: 'sim', priority: 'extra' },
+            { id: 'def_35', name: 'Margarina tradicional', category: 'Laticínios e pães', unit: 'un', minStock: 1, currentStock: 1, brand: 'Qualy', toBuy: 'nao', priority: 'obrigatorio' },
+            { id: 'def_36', name: 'Margarina alho', category: 'Laticínios e pães', unit: 'un', minStock: 1, currentStock: 0, brand: 'Qualy', toBuy: 'sim', priority: 'extra' },
+
+            // Limpeza da casa
+            { id: 'def_37', name: 'Sabão em pó', category: 'Limpeza da casa', unit: 'pacote', minStock: 1, currentStock: 0, brand: 'Omo', toBuy: 'sim', priority: 'obrigatorio' },
+            { id: 'def_38', name: 'Lava roupas líquido 5L', category: 'Limpeza da casa', unit: 'un', minStock: 1, currentStock: 1, brand: 'Ariel', toBuy: 'nao', priority: 'obrigatorio' },
+            { id: 'def_39', name: 'Amaciante 5 litros', category: 'Limpeza da casa', unit: 'un', minStock: 1, currentStock: 0, brand: 'Ypê', toBuy: 'sim', priority: 'obrigatorio' },
+            { id: 'def_40', name: 'Amaciante concentrado', category: 'Limpeza da casa', unit: 'un', minStock: 1, currentStock: 1, brand: 'Downy', toBuy: 'nao', priority: 'extra' },
+            { id: 'def_41', name: 'Detergente', category: 'Limpeza da casa', unit: 'un', minStock: 3, currentStock: 1, brand: 'Ypê', toBuy: 'sim', priority: 'obrigatorio' },
+            { id: 'def_42', name: 'Álcool', category: 'Limpeza da casa', unit: 'litro', minStock: 1, currentStock: 0, brand: 'Coperalcool', toBuy: 'sim', priority: 'obrigatorio' },
+            { id: 'def_43', name: 'Sabólio', category: 'Limpeza da casa', unit: 'un', minStock: 1, currentStock: 1, brand: 'Radium', toBuy: 'nao', priority: 'extra' },
+            { id: 'def_44', name: 'Limpa alumínio', category: 'Limpeza da casa', unit: 'un', minStock: 1, currentStock: 0, brand: 'Brilux', toBuy: 'sim', priority: 'extra' },
+            { id: 'def_45', name: 'Perfex', category: 'Limpeza da casa', unit: 'pacote', minStock: 1, currentStock: 1, brand: '', toBuy: 'nao', priority: 'extra' },
+            { id: 'def_46', name: 'Palha de aço', category: 'Limpeza da casa', unit: 'pacote', minStock: 1, currentStock: 0, brand: 'Bombril', toBuy: 'sim', priority: 'obrigatorio' },
+            { id: 'def_47', name: 'Esponja', category: 'Limpeza da casa', unit: 'pacote', minStock: 1, currentStock: 1, brand: '3M', toBuy: 'nao', priority: 'obrigatorio' },
+
+            // Higiene e papelaria
+            { id: 'def_48', name: 'Sabonetes', category: 'Higiene e papelaria', unit: 'un', minStock: 4, currentStock: 1, brand: 'Dove', toBuy: 'sim', priority: 'obrigatorio' },
+            { id: 'def_49', name: 'Sabonete Thiago', category: 'Higiene e papelaria', unit: 'un', minStock: 2, currentStock: 0, brand: 'Rexona', toBuy: 'sim', priority: 'obrigatorio' },
+            { id: 'def_50', name: 'Pasta de dente — casa', category: 'Higiene e papelaria', unit: 'un', minStock: 2, currentStock: 1, brand: 'Colgate', toBuy: 'sim', priority: 'obrigatorio' },
+            { id: 'def_51', name: 'Pasta de dente — bolsa', category: 'Higiene e papelaria', unit: 'un', minStock: 1, currentStock: 0, brand: 'CloseUp', toBuy: 'sim', priority: 'extra' },
+            { id: 'def_52', name: 'Escova de dente', category: 'Higiene e papelaria', unit: 'un', minStock: 1, currentStock: 1, brand: 'Oral-B', toBuy: 'nao', priority: 'extra' },
+            { id: 'def_53', name: 'Papel higiênico', category: 'Higiene e papelaria', unit: 'pacote', minStock: 2, currentStock: 0, brand: 'Neve', toBuy: 'sim', priority: 'obrigatorio' },
+            { id: 'def_54', name: 'Papel toalha', category: 'Higiene e papelaria', unit: 'pacote', minStock: 1, currentStock: 0, brand: 'Snack', toBuy: 'sim', priority: 'obrigatorio' },
+            { id: 'def_55', name: 'Papel alumínio', category: 'Higiene e papelaria', unit: 'un', minStock: 1, currentStock: 1, brand: 'Wyda', toBuy: 'nao', priority: 'extra' },
+            { id: 'def_56', name: 'Papel manteiga', category: 'Higiene e papelaria', unit: 'un', minStock: 1, currentStock: 0, brand: 'Wyda', toBuy: 'sim', priority: 'extra' },
+            { id: 'def_57', name: 'Filme PVC', category: 'Higiene e papelaria', unit: 'un', minStock: 1, currentStock: 1, brand: 'Wyda', toBuy: 'nao', priority: 'extra' },
+            { id: 'def_58', name: 'Fermento Dr. Oetker', category: 'Higiene e papelaria', unit: 'un', minStock: 1, currentStock: 0, brand: 'Dr. Oetker', toBuy: 'sim', priority: 'extra' }
+        ];
+
+        /* ==========================================================================
+           STATE MANAGEMENT & LOCALSTORAGE PERSISTENCE
+           ========================================================================== */
+        let appState = {
+            userProfile: {
+                name: 'Usuário',
+                secretCode: 'MERCADO-789'
+            },
+            items: [],
+            shoppingData: {}, // { itemId: { unitPrice, buyQty, boughtBrand, claimedBy, priority } }
+            history: [],     // [ { id, date, total, totalReq, totalExtra, items: [] } ]
+            activities: [],  // [ { id, user, text, time } ]
+            lastPrices: {}    // { itemId or itemName: lastPrice }
+        };
+
+        let currentShoppingFilter = 'all';
+
+        // Load or Initialize Data
+        function initData() {
+            const savedState = localStorage.getItem('mercado_control_user_data');
+            if (savedState) {
+                try {
+                    appState = JSON.parse(savedState);
+                } catch(e) {
+                    console.error("Erro ao carregar dados salvos:", e);
+                    appState.items = JSON.parse(JSON.stringify(defaultCatalog));
+                }
+            } else {
+                // Initialize from default Catalog
+                appState.items = JSON.parse(JSON.stringify(defaultCatalog));
+                logActivity('Sistema', 'Estoque inicial gerado com itens padrão.');
+                saveAppState();
+            }
+
+            // Ensure name from URL parameter if shared
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            if (code) {
+                appState.userProfile.secretCode = code;
+            }
+
+            // Prompt user for name if default
+            if (!localStorage.getItem('mercado_control_username')) {
+                const namePrompt = prompt("Bem-vindo ao MercadoControl! Informe seu nome para editar e colaborarmos:", "Maria");
+                if (namePrompt && namePrompt.trim() !== '') {
+                    appState.userProfile.name = namePrompt.trim();
+                    localStorage.setItem('mercado_control_username', appState.userProfile.name);
+                }
+            } else {
+                appState.userProfile.name = localStorage.getItem('mercado_control_username');
+            }
+
+            // Initialize shopping inputs state for items marked 'sim'
+            appState.items.forEach(item => {
+                if (item.toBuy === 'sim' && !appState.shoppingData[item.id]) {
+                    const needQty = Math.max(1, item.minStock - item.currentStock);
+                    appState.shoppingData[item.id] = {
+                        unitPrice: 0,
+                        buyQty: needQty,
+                        boughtBrand: item.brand || '',
+                        claimedBy: '',
+                        priority: item.priority || 'obrigatorio'
+                    };
+                }
+            });
+
+            updateUI();
         }
-      });
 
-      localStorage.setItem('historico_compras', JSON.stringify(historicoCompras));
-      salvarDados();
-      alert("Compra finalizada! Estoque atualizado.");
-      mudarAba('historico');
-    }
+        function saveAppState() {
+            localStorage.setItem('mercado_control_user_data', JSON.stringify(appState));
+            updateUI();
+        }
 
-    // 4
+        function logActivity(user, text) {
+            const time = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            appState.activities.unshift({
+                id: 'act_' + Date.now() + Math.random().toString(36).substr(2, 4),
+                user: user || appState.userProfile.name,
+                text: text,
+                time: time
+            });
+            if (appState.activities.length > 50) appState.activities.pop();
+        }
+
+        /* ==========================================================================
+           UI RENDERING & TAB SWITCHING
+           ========================================================================== */
+        function updateUI() {
+            document.getElementById('userNameDisplay').innerText = appState.userProfile.name;
+            document.getElementById('collabCurrentUserName').innerText = appState.userProfile.name;
+            document.getElementById('shareSecretCode').innerText = appState.userProfile.secretCode;
+            document.getElementById('shareUrlInput').value = window.location.origin + window.location.pathname + '?code=' + appState.userProfile.secretCode;
+
+            // Datalist options for modal
+            populateDatalists();
+
+            renderEstoque();
+            renderCompras();
+            renderHistorico();
+            renderAtividades();
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('text-brandPrimary');
+                btn.classList.add('text-slate-400');
+            });
+
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`nav-${tabName}`);
+            activeBtn.classList.add('text-brandPrimary');
+            activeBtn.classList.remove('text-slate-400');
+
+            // Toggle Fixed Shopping Footer Bar
+            const shoppingFooter = document.getElementById('shoppingFooterBar');
+            if (tabName === 'compras') {
+                shoppingFooter.classList.remove('hidden');
+            } else {
+                shoppingFooter.classList.add('hidden');
+            }
+        }
+
+        /* ==========================================================================
+           ESTOQUE RENDERING & EDITING
+           ========================================================================== */
+        function renderEstoque() {
+            const container = document.getElementById('stockCategoriesContainer');
+            const searchQuery = document.getElementById('searchStock').value.toLowerCase();
+            container.innerHTML = '';
+
+            let totalItems = 0;
+            let lowStockCount = 0;
+            let toBuyCount = 0;
+
+            // Group items by Category
+            const categoriesMap = {};
+
+            appState.items.forEach(item => {
+                totalItems++;
+                
+                // Check if low stock
+                if (Number(item.currentStock) <= Number(item.minStock)) {
+                    lowStockCount++;
+                }
+
+                if (item.toBuy === 'sim') {
+                    toBuyCount++;
+                }
+
+                // Search Filter
+                if (searchQuery && !item.name.toLowerCase().includes(searchQuery) && !item.category.toLowerCase().includes(searchQuery)) {
+                    return;
+                }
+
+                if (!categoriesMap[item.category]) {
+                    categoriesMap[item.category] = [];
+                }
+                categoriesMap[item.category].push(item);
+            });
+
+            // Update Header Quick Stats
+            document.getElementById('statTotalItems').innerText = totalItems;
+            document.getElementById('statLowStock').innerText = lowStockCount;
+            document.getElementById('statToBuy').innerText = toBuyCount;
+
+            // Render Nav Cart Badge
+            const navBadge = document.getElementById('navCartBadge');
+            if (toBuyCount > 0) {
+                navBadge.innerText = toBuyCount;
+                navBadge.classList.remove('hidden');
+            } else {
+                navBadge.classList.add('hidden');
+            }
+
+            // Populate Accordions
+            const categories = Object.keys(categoriesMap);
+
+            if (categories.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-slate-500 text-xs">
+                        Nenhum item encontrado no estoque.
+                    </div>`;
+                return;
+            }
+
+            categories.forEach((catName, index) => {
+                const itemsList = categoriesMap[catName];
+
+                const catDiv = document.createElement('div');
+                catDiv.className = 'bg-darkCard rounded-2xl border border-darkBorder overflow-hidden shadow-sm';
+
+                const accordionHeader = `
+                    <button onclick="toggleAccordion('${index}')" class="w-full px-4 py-3 bg-slate-800/60 hover:bg-slate-800 flex items-center justify-between text-left transition-all">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-folder text-brandSecondary text-xs"></i>
+                            <span class="font-bold text-xs text-slate-200">${catName}</span>
+                            <span class="text-[10px] bg-slate-700/80 text-slate-300 px-2 py-0.5 rounded-full font-semibold">${itemsList.length}</span>
+                        </div>
+                        <i id="acc-icon-${index}" class="fa-solid fa-chevron-down text-xs text-slate-400 transition-transform"></i>
+                    </button>
+                `;
+
+                let itemsHTML = `<div id="acc-body-${index}" class="divide-y divide-darkBorder px-3 py-1">`;
+
+                itemsList.forEach(item => {
+                    const isLow = Number(item.currentStock) <= Number(item.minStock);
+                    const isBuying = item.toBuy === 'sim';
+
+                    itemsHTML += `
+                        <div class="py-2.5 flex items-center justify-between gap-2">
+                            <div class="flex-1 min-w-0" onclick="editItem('${item.id}')">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-semibold text-xs text-white truncate cursor-pointer hover:text-brandPrimary">${item.name}</span>
+                                    ${isBuying ? '<span class="text-[9px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.2 rounded font-medium">Na Lista</span>' : ''}
+                                </div>
+                                <p class="text-[10px] text-slate-400 flex items-center gap-2 mt-0.5">
+                                    <span>Mín: ${item.minStock} ${item.unit}</span>
+                                    ${item.brand ? `<span>• Marca: ${item.brand}</span>` : ''}
+                                </p>
+                            </div>
+
+                            <!-- DIRECT STOCK INCREMENT/DECREMENT BUTTONS -->
+                            <div class="flex items-center gap-2 shrink-0">
+                                <div class="flex items-center bg-slate-900 border border-darkBorder rounded-xl p-0.5">
+                                    <button onclick="adjustStock('${item.id}', -1)" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm flex items-center justify-center active:scale-90 transition-all">
+                                        −
+                                    </button>
+                                    <div class="px-2.5 text-center min-w-[2.5rem]">
+                                        <span class="text-xs font-bold ${isLow ? 'text-amber-400' : 'text-white'}">${item.currentStock}</span>
+                                        <span class="text-[8px] block text-slate-500 -mt-1">${item.unit}</span>
+                                    </div>
+                                    <button onclick="adjustStock('${item.id}', 1)" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm flex items-center justify-center active:scale-90 transition-all">
+                                        +
+                                    </button>
+                                </div>
+
+                                <button onclick="editItem('${item.id}')" class="p-2 text-slate-400 hover:text-white text-xs">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                itemsHTML += `</div>`;
+
+                catDiv.innerHTML = accordionHeader + itemsHTML;
+                container.appendChild(catDiv);
+            });
+        }
+
+        function toggleAccordion(index) {
+            const body = document.getElementById(`acc-body-${index}`);
+            const icon = document.getElementById(`acc-icon-${index}`);
+            if (body.classList.contains('hidden')) {
+                body.classList.remove('hidden');
+                icon.classList.remove('rotate-180');
+            } else {
+                body.classList.add('hidden');
+                icon.classList.add('rotate-180');
+            }
+        }
+
+        // Adjust Stock directly from Home
+        function adjustStock(id, delta) {
+            const item = appState.items.find(i => i.id === id);
+            if (!item) return;
+
+            const oldStock = Number(item.currentStock);
+            let newStock = oldStock + delta;
+            if (newStock < 0) newStock = 0;
+
+            item.currentStock = newStock;
+
+            // Auto Suggest Purchase if Current <= Min
+            if (newStock <= Number(item.minStock)) {
+                if (item.toBuy !== 'sim') {
+                    item.toBuy = 'sim';
+                    // initialize shopping data
+                    const needQty = Math.max(1, Number(item.minStock) - newStock);
+                    appState.shoppingData[item.id] = {
+                        unitPrice: 0,
+                        buyQty: needQty,
+                        boughtBrand: item.brand || '',
+                        claimedBy: '',
+                        priority: item.priority || 'obrigatorio'
+                    };
+                    logActivity(appState.userProfile.name, `Estoque de "${item.name}" ficou crítico (${newStock}). Adicionado à compra.`);
+                }
+            }
+
+            saveAppState();
+        }
+
+        /* ==========================================================================
+           COMPRAS / MODO MERCADO RENDERING & CALCULATION
+           ========================================================================== */
+        function filterShoppingList(type) {
+            currentShoppingFilter = type;
+            document.querySelectorAll('#btnFilterAll, #btnFilterReq, #btnFilterExtra').forEach(btn => {
+                btn.classList.remove('text-white', 'bg-slate-700');
+                btn.classList.add('text-slate-400');
+            });
+            if (type === 'all') document.getElementById('btnFilterAll').classList.add('text-white', 'bg-slate-700');
+            if (type === 'obrigatorio') document.getElementById('btnFilterReq').classList.add('text-white', 'bg-slate-700');
+            if (type === 'extra') document.getElementById('btnFilterExtra').classList.add('text-white', 'bg-slate-700');
+
+            renderCompras();
+        }
+
+        function renderCompras() {
+            const container = document.getElementById('shoppingListContainer');
+            const emptyState = document.getElementById('emptyShoppingState');
+            container.innerHTML = '';
+
+            const itemsToBuy = appState.items.filter(i => i.toBuy === 'sim');
+
+            if (itemsToBuy.length === 0) {
+                emptyState.classList.remove('hidden');
+                document.getElementById('footerTotalReq').innerText = 'R$ 0,00';
+                document.getElementById('footerTotalExtra').innerText = 'R$ 0,00';
+                document.getElementById('footerTotalAll').innerText = 'R$ 0,00';
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            let totalReq = 0;
+            let totalExtra = 0;
+
+            itemsToBuy.forEach(item => {
+                // Ensure shopping data exists
+                if (!appState.shoppingData[item.id]) {
+                    const needQty = Math.max(1, Number(item.minStock) - Number(item.currentStock));
+                    appState.shoppingData[item.id] = {
+                        unitPrice: 0,
+                        buyQty: needQty,
+                        boughtBrand: item.brand || '',
+                        claimedBy: '',
+                        priority: item.priority || 'obrigatorio'
+                    };
+                }
+
+                const sData = appState.shoppingData[item.id];
+
+                // Filter check
+                if (currentShoppingFilter !== 'all' && sData.priority !== currentShoppingFilter) {
+                    return;
+                }
+
+                const uPrice = parseFloat(sData.unitPrice) || 0;
+                const qty = parseFloat(sData.buyQty) || 1;
+                const itemTotal = uPrice * qty;
+
+                if (sData.priority === 'obrigatorio') {
+                    totalReq += itemTotal;
+                } else {
+                    totalExtra += itemTotal;
+                }
+
+                const lastPrice = appState.lastPrices[item.id] || appState.lastPrices[item.name] || null;
+                const isClaimedByMe = sData.claimedBy === appState.userProfile.name;
+
+                const card = document.createElement('div');
+                card.className = `bg-darkCard p-3.5 rounded-2xl border transition-all space-y-3 ${isClaimedByMe ? 'border-brandSecondary bg-slate-800/50' : 'border-darkBorder'}`;
+
+                card.innerHTML = `
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-xs font-bold text-white">${item.name}</h3>
+                                <span class="text-[9px] px-1.5 py-0.2 rounded font-semibold ${sData.priority === 'obrigatorio' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'}">
+                                    ${sData.priority === 'obrigatorio' ? 'Obrigatório' : 'Extra'}
+                                </span>
+                            </div>
+                            <p class="text-[10px] text-slate-400 mt-0.5">
+                                Categoria: ${item.category} ${item.brand ? `• Marca: ${item.brand}` : ''}
+                            </p>
+                            ${lastPrice !== null ? `<span class="text-[9px] text-emerald-400 font-medium">Último preço pago: R$ ${parseFloat(lastPrice).toFixed(2).replace('.', ',')}</span>` : ''}
+                        </div>
+
+                        <!-- CLAIM BUTTON ("Eu pego") -->
+                        <button onclick="toggleClaimItem('${item.id}')" class="shrink-0 px-2.5 py-1 rounded-xl text-[10px] font-bold border transition-all ${sData.claimedBy ? 'bg-brandSecondary/20 border-brandSecondary text-blue-300' : 'bg-slate-800 border-darkBorder text-slate-400 hover:text-white'}">
+                            <i class="fa-solid fa-hand text-[10px] mr-1"></i>
+                            ${sData.claimedBy ? `Pegando: ${sData.claimedBy}` : 'Eu Pego'}
+                        </button>
+                    </div>
+
+                    <!-- SHOPPING INPUTS GRID -->
+                    <div class="grid grid-cols-3 gap-2 pt-1 border-t border-darkBorder/60">
+                        <div>
+                            <label class="block text-[9px] text-slate-400 mb-0.5">Qtd Comprando</label>
+                            <input type="number" min="0.1" step="any" value="${sData.buyQty}" onchange="updateShoppingInput('${item.id}', 'buyQty', this.value)" class="w-full bg-slate-900 border border-darkBorder rounded-lg px-2 py-1.5 text-xs text-white font-bold focus:border-brandPrimary focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] text-slate-400 mb-0.5">Preço Unit. (R$)</label>
+                            <input type="number" min="0" step="0.01" placeholder="0,00" value="${sData.unitPrice || ''}" onchange="updateShoppingInput('${item.id}', 'unitPrice', this.value)" class="w-full bg-slate-900 border border-darkBorder rounded-lg px-2 py-1.5 text-xs text-white font-bold focus:border-brandPrimary focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] text-slate-400 mb-0.5">Total Item</label>
+                            <div class="bg-slate-900 border border-darkBorder rounded-lg px-2 py-1.5 text-xs font-bold text-emerald-400 flex items-center justify-between">
+                                <span>R$</span>
+                                <span>${itemTotal.toFixed(2).replace('.', ',')}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- OPTIONAL BRAND & REMOVE BUTTON -->
+                    <div class="flex items-center justify-between gap-2 text-[10px]">
+                        <input type="text" placeholder="Marca comprada (opcional)..." value="${sData.boughtBrand || ''}" onchange="updateShoppingInput('${item.id}', 'boughtBrand', this.value)" class="flex-1 bg-slate-900/60 border border-darkBorder rounded-lg px-2 py-1 text-slate-300 placeholder-slate-500 focus:outline-none">
+                        <button onclick="removeFromShoppingList('${item.id}')" class="text-rose-400 hover:text-rose-300 p-1">
+                            <i class="fa-solid fa-trash-can"></i> Remover
+                        </button>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+
+            // Update Totals Bar
+            const grandTotal = totalReq + totalExtra;
+            document.getElementById('footerTotalReq').innerText = `R$ ${totalReq.toFixed(2).replace('.', ',')}`;
+            document.getElementById('footerTotalExtra').innerText = `R$ ${totalExtra.toFixed(2).replace('.', ',')}`;
+            document.getElementById('footerTotalAll').innerText = `R$ ${grandTotal.toFixed(2).replace('.', ',')}`;
+        }
+
+        function updateShoppingInput(itemId, field, value) {
+            if (!appState.shoppingData[itemId]) return;
+            appState.shoppingData[itemId][field] = value;
+            saveAppState();
+        }
+
+        function toggleClaimItem(itemId) {
+            if (!appState.shoppingData[itemId]) return;
+            const current = appState.shoppingData[itemId].claimedBy;
+            if (current === appState.userProfile.name) {
+                appState.shoppingData[itemId].claimedBy = '';
+                logActivity(appState.userProfile.name, `Desmarcou a compra de um item.`);
+            } else {
+                appState.shoppingData[itemId].claimedBy = appState.userProfile.name;
+                logActivity(appState.userProfile.name, `Marcou "Eu pego" em um item.`);
+            }
+            saveAppState();
+        }
+
+        function removeFromShoppingList(itemId) {
+            const item = appState.items.find(i => i.id === itemId);
+            if (item) {
+                item.toBuy = 'nao';
+                delete appState.shoppingData[itemId];
+                logActivity(appState.userProfile.name, `Removeu "${item.name}" da lista de compras.`);
+                saveAppState();
+            }
+        }
+
+        function addExtraShoppingItem() {
+            const input = document.getElementById('extraItemName');
+            const name = input.value.trim();
+            if (!name) return;
+
+            // Check if already exists in stock
+            let existing = appState.items.find(i => i.name.toLowerCase() === name.toLowerCase());
+            if (!existing) {
+                existing = {
+                    id: 'item_' + Date.now(),
+                    name: name,
+                    category: 'Extras de Mercado',
+                    unit: 'un',
+                    minStock: 1,
+                    currentStock: 0,
+                    brand: '',
+                    toBuy: 'sim',
+                    priority: 'extra'
+                };
+                appState.items.push(existing);
+            } else {
+                existing.toBuy = 'sim';
+                existing.priority = 'extra';
+            }
+
+            appState.shoppingData[existing.id] = {
+                unitPrice: 0,
+                buyQty: 1,
+                boughtBrand: '',
+                claimedBy: appState.userProfile.name,
+                priority: 'extra'
+            };
+
+            input.value = '';
+            logActivity(appState.userProfile.name, `Adicionou item extra de última hora: "${name}"`);
+            saveAppState();
+        }
+
+        /* ==========================================================================
+           5. FINALIZAÇÃO DA COMPRA & HISTÓRICO
+           ========================================================================== */
+        function finalizarCompra() {
+            const itemsToBuy = appState.items.filter(i => i.toBuy === 'sim');
+            if (itemsToBuy.length === 0) return;
+
+            if (!confirm("Deseja realmente finalizar esta compra? O estoque atual será atualizado e o histórico será salvo.")) {
+                return;
+            }
+
+            let totalCompra = 0;
+            let totalReq = 0;
+            let totalExtra = 0;
+            const purchasedItemsList = [];
+
+            itemsToBuy.forEach(item => {
+                const sData = appState.shoppingData[item.id] || {};
+                const qty = parseFloat(sData.buyQty) || 1;
+                const uPrice = parseFloat(sData.unitPrice) || 0;
+                const itemTotal = qty * uPrice;
+
+                totalCompra += itemTotal;
+                if (sData.priority === 'obrigatorio') totalReq += itemTotal;
+                else totalExtra += itemTotal;
+
+                // 1. Update current stock in home
+                item.currentStock = Number(item.currentStock) + qty;
+                item.toBuy = 'nao'; // reset option
+
+                // Record last price
+                if (uPrice > 0) {
+                    appState.lastPrices[item.id] = uPrice;
+                    appState.lastPrices[item.name] = uPrice;
+                }
+
+                purchasedItemsList.push({
+                    name: item.name,
+                    category: item.category,
+                    qty: qty,
+                    unit: item.unit,
+                    unitPrice: uPrice,
+                    total: itemTotal,
+                    brand: sData.boughtBrand || item.brand || '',
+                    priority: sData.priority || 'obrigatorio'
+                });
+
+                delete appState.shoppingData[item.id];
+            });
+
+            // 2. Save complete history record
+            const historyRecord = {
+                id: 'hist_' + Date.now(),
+                date: new Date().toLocaleDateString('pt-BR') + ' às ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                total: totalCompra,
+                totalReq: totalReq,
+                totalExtra: totalExtra,
+                items: purchasedItemsList,
+                user: appState.userProfile.name
+            };
+
+            appState.history.unshift(historyRecord);
+            logActivity(appState.userProfile.name, `Finalizou a compra totalizando R$ ${totalCompra.toFixed(2).replace('.', ',')}`);
+
+            saveAppState();
+            switchTab('historico');
+            alert("Compra finalizada com sucesso! O estoque foi automaticamente atualizado.");
+        }
+
+        function renderHistorico() {
+            const container = document.getElementById('historyListContainer');
+            const emptyState = document.getElementById('emptyHistoryState');
+            container.innerHTML = '';
+
+            if (appState.history.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            appState.history.forEach(h => {
+                const card = document.createElement('div');
+                card.className = 'bg-darkCard p-4 rounded-2xl border border-darkBorder space-y-3';
+
+                let itemsHTML = '<div class="space-y-1 pt-2 border-t border-darkBorder text-[11px]">';
+                h.items.forEach(it => {
+                    itemsHTML += `
+                        <div class="flex justify-between text-slate-300">
+                            <span>${it.qty}x ${it.name} ${it.brand ? `(${it.brand})` : ''}</span>
+                            <span class="font-mono text-slate-400">R$ ${it.total.toFixed(2).replace('.', ',')}</span>
+                        </div>
+                    `;
+                });
+                itemsHTML += '</div>';
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="text-xs font-bold text-white block">${h.date}</span>
+                            <span class="text-[10px] text-slate-400">Finalizado por: ${h.user || 'Usuário'}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-sm font-bold text-emerald-400 block">R$ ${h.total.toFixed(2).replace('.', ',')}</span>
+                            <span class="text-[9px] text-slate-400">Obrig: R$ ${h.totalReq.toFixed(2)} | Extra: R$ ${h.totalExtra.toFixed(2)}</span>
+                        </div>
+                    </div>
+                    ${itemsHTML}
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        function clearHistory() {
+            if (confirm("Limpar todo o histórico de compras salvas?")) {
+                appState.history = [];
+                saveAppState();
+            }
+        }
+
+        /* ==========================================================================
+           7. COLABORAÇÃO & ATIVIDADES
+           ========================================================================== */
+        function renderAtividades() {
+            const container = document.getElementById('activitiesContainer');
+            container.innerHTML = '';
+
+            if (appState.activities.length === 0) {
+                container.innerHTML = '<p class="text-xs text-slate-500 py-4 text-center">Nenhuma atividade recente registrada.</p>';
+                return;
+            }
+
+            appState.activities.forEach(act => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'bg-darkCard p-3 rounded-xl border border-darkBorder flex items-start gap-2.5 text-xs';
+                itemDiv.innerHTML = `
+                    <div class="w-7 h-7 rounded-full bg-slate-800 border border-darkBorder flex items-center justify-center text-brandSecondary shrink-0 font-bold text-xs">
+                        ${act.user.charAt(0).toUpperCase()}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-center">
+                            <strong class="text-white text-[11px]">${act.user}</strong>
+                            <span class="text-[9px] text-slate-500">${act.time}</span>
+                        </div>
+                        <p class="text-slate-300 text-[11px] mt-0.5">${act.text}</p>
+                    </div>
+                `;
+                container.appendChild(itemDiv);
+            });
+        }
+
+        function hideLiveAlert() {
+            document.getElementById('liveAlertBanner').classList.add('hidden');
+        }
+
+        /* ==========================================================================
+           MODAL ITEM CRUD & DATALISTS
+           ========================================================================== */
+        function populateDatalists() {
+            const presetNames = document.getElementById('presetNamesList');
+            const presetCats = document.getElementById('presetCategoriesList');
+            presetNames.innerHTML = '';
+            presetCats.innerHTML = '';
+
+            const uniqueNames = new Set(appState.items.map(i => i.name));
+            const uniqueCats = new Set(appState.items.map(i => i.category));
+
+            uniqueNames.forEach(n => presetNames.innerHTML += `<option value="${n}">`);
+            uniqueCats.forEach(c => presetCats.innerHTML += `<option value="${c}">`);
+        }
+
+        function openItemModal(itemId = null) {
+            document.getElementById('itemForm').reset();
+            document.getElementById('formItemId').value = '';
+            document.getElementById('modalItemTitle').innerHTML = `<i class="fa-solid fa-plus text-brandPrimary"></i> Novo Item no Estoque`;
+
+            if (itemId) {
+                const item = appState.items.find(i => i.id === itemId);
+                if (item) {
+                    document.getElementById('formItemId').value = item.id;
+                    document.getElementById('formItemName').value = item.name;
+                    document.getElementById('formCategory').value = item.category;
+                    document.getElementById('formUnit').value = item.unit;
+                    document.getElementById('formBrand').value = item.brand || '';
+                    document.getElementById('formMinStock').value = item.minStock;
+                    document.getElementById('formCurrentStock').value = item.currentStock;
+                    document.getElementById('formToBuy').value = item.toBuy || 'nao';
+                    document.getElementById('formPriority').value = item.priority || 'obrigatorio';
+                    document.getElementById('modalItemTitle').innerHTML = `<i class="fa-solid fa-pen-to-square text-brandPrimary"></i> Editar Item`;
+                }
+            }
+
+            document.getElementById('modalItem').classList.remove('hidden');
+        }
+
+        function editItem(id) {
+            openItemModal(id);
+        }
+
+        function closeItemModal() {
+            document.getElementById('modalItem').classList.add('hidden');
+        }
+
+        function handleSaveItem(e) {
+            e.preventDefault();
+
+            const id = document.getElementById('formItemId').value;
+            const name = document.getElementById('formItemName').value.trim();
+            const category = document.getElementById('formCategory').value.trim();
+            const unit = document.getElementById('formUnit').value;
+            const brand = document.getElementById('formBrand').value.trim();
+            const minStock = parseFloat(document.getElementById('formMinStock').value) || 0;
+            const currentStock = parseFloat(document.getElementById('formCurrentStock').value) || 0;
+            const toBuy = document.getElementById('formToBuy').value;
+            const priority = document.getElementById('formPriority').value;
+
+            if (id) {
+                // Update
+                const item = appState.items.find(i => i.id === id);
+                if (item) {
+                    item.name = name;
+                    item.category = category;
+                    item.unit = unit;
+                    item.brand = brand;
+                    item.minStock = minStock;
+                    item.currentStock = currentStock;
+                    item.toBuy = toBuy;
+                    item.priority = priority;
+                    logActivity(appState.userProfile.name, `Editou as informações do item "${name}".`);
+                }
+            } else {
+                // Create
+                const newItem = {
+                    id: 'item_' + Date.now(),
+                    name,
+                    category,
+                    unit,
+                    brand,
+                    minStock,
+                    currentStock,
+                    toBuy,
+                    priority
+                };
+                appState.items.push(newItem);
+                logActivity(appState.userProfile.name, `Cadastrou o novo item "${name}".`);
+            }
+
+            saveAppState();
+            closeItemModal();
+        }
+
+        /* ==========================================================================
+           MODALS PROFILE & SHARE & DATA EXPORT/IMPORT
+           ========================================================================== */
+        function openProfileModal() {
+            document.getElementById('profileUserNameInput').value = appState.userProfile.name;
+            document.getElementById('modalProfile').classList.remove('hidden');
+        }
+
+        function closeProfileModal() {
+            document.getElementById('modalProfile').classList.add('hidden');
+        }
+
+        function saveUserName() {
+            const input = document.getElementById('profileUserNameInput').value.trim();
+            if (input) {
+                appState.userProfile.name = input;
+                localStorage.setItem('mercado_control_username', input);
+                saveAppState();
+                closeProfileModal();
+            }
+        }
+
+        function openShareModal() {
+            document.getElementById('modalShare').classList.remove('hidden');
+        }
+
+        function closeShareModal() {
+            document.getElementById('modalShare').classList.add('hidden');
+        }
+
+        function copyShareLink() {
+            const shareUrl = document.getElementById('shareUrlInput');
+            shareUrl.select();
+            document.execCommand('copy');
+            alert("Link de compartilhamento copiado com sucesso!");
+        }
+
+        function exportUserDataJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `mercado_control_backup_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importUserDataJSON(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const importedState = JSON.parse(event.target.result);
+                    if (importedState && importedState.items) {
+                        appState = importedState;
+                        saveAppState();
+                        alert("Dados do estoque importados com sucesso!");
+                        closeProfileModal();
+                    } else {
+                        alert("Arquivo JSON inválido.");
+                    }
+                } catch(err) {
+                    alert("Erro ao ler o arquivo de backup JSON.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function resetToDefaultData() {
+            if (confirm("Restaurar para a lista e quantidades padrão originais? Ações atuais serão redefinidas.")) {
+                appState.items = JSON.parse(JSON.stringify(defaultCatalog));
+                appState.shoppingData = {};
+                logActivity('Sistema', 'Estoque restaurado para o padrão original.');
+                saveAppState();
+                closeProfileModal();
+            }
+        }
+
+        /* ==========================================================================
+           INIT ON LOAD
+           ========================================================================== */
+        window.onload = function() {
+            initData();
+        };
+    </script>
+</body>
+</html>
