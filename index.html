@@ -26,62 +26,219 @@
     <div class="max-w-md mx-auto flex items-center justify-between">
       <div class="flex items-center space-x-2">
         <i data-lucide="shopping-bag" class="w-6 h-6 text-emerald-400"></i>
-        <h1 class="text-lg font-bold bg-gradient-to-r from-emerald-400 to-teal-200 bg-clip-text text-transparent">Minhas Compras</h1>
+        <h1 class="text-lg font-bold bg-gradient-to-r from-emerald-400 to-teal-200 bg-clip-text text-transparent">MercadoSmart</h1>
       </div>
-      <div class="flex items-center gap-2">
-        <button onclick="abrirModalUsuario()" id="btn-usuario" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-lg text-emerald-300 text-xs flex items-center gap-1 font-medium transition">
-          <i data-lucide="user" class="w-3.5 h-3.5"></i> <span id="lbl-usuario">Convidado</span>
-        </button>
-      </div>
+      <button onclick="abrirModalUsuario()" id="btn-usuario" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-lg text-emerald-300 text-xs flex items-center gap-1.5 font-medium transition">
+        <i data-lucide="user" class="w-3.5 h-3.5"></i> <span id="lbl-usuario">Convidado</span>
+      </button>
     </div>
   </header>
 
-  <!-- Container Principal -->
-  <main class="max-w-md mx-auto p-4 space-y-4" id="app-content">
-    <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-md">
-      <div class="flex items-center justify-between mb-3">
+  <!-- Navegação por Abas Inferior -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-slate-800 border-t border-slate-700 z-40">
+    <div class="max-w-md mx-auto flex justify-around p-2">
+      <button onclick="mudarAba('estoque')" id="tab-estoque" class="flex flex-col items-center p-2 text-emerald-400 font-medium text-xs">
+        <i data-lucide="package" class="w-5 h-5 mb-0.5"></i> Estoque
+      </button>
+      <button onclick="mudarAba('comprar')" id="tab-comprar" class="flex flex-col items-center p-2 text-slate-400 hover:text-emerald-400 text-xs transition">
+        <i data-lucide="list-checks" class="w-5 h-5 mb-0.5"></i> A Comprar
+      </button>
+      <button onclick="mudarAba('mercado')" id="tab-mercado" class="flex flex-col items-center p-2 text-slate-400 hover:text-emerald-400 text-xs transition">
+        <i data-lucide="shopping-cart" class="w-5 h-5 mb-0.5"></i> Mercado
+      </button>
+      <button onclick="mudarAba('historico')" id="tab-historico" class="flex flex-col items-center p-2 text-slate-400 hover:text-emerald-400 text-xs transition">
+        <i data-lucide="history" class="w-5 h-5 mb-0.5"></i> Histórico
+      </button>
+    </div>
+  </nav>
+
+  <!-- Conteúdo Principal -->
+  <main class="max-w-md mx-auto p-4 space-y-4">
+
+    <!-- ABA 1: ESTOQUE -->
+    <section id="sec-estoque" class="space-y-4">
+      <div class="flex items-center justify-between">
         <h2 class="text-base font-semibold text-emerald-400 flex items-center gap-2">
           <i data-lucide="package" class="w-5 h-5"></i> Controle de Estoque
         </h2>
-        <span class="text-xs text-slate-400">Ajuste rápido (+ / -)</span>
+        <button onclick="abrirModalItem()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1">
+          <i data-lucide="plus" class="w-4 h-4"></i> Novo Item
+        </button>
       </div>
-      <p class="text-xs text-slate-400 mb-4">Altere a quantidade em estoque diretamente na lista abaixo sem abrir edições:</p>
-      
-      <div id="lista-estoque" class="space-y-3">
-        <!-- Itens carregados dinamicamente pelo JavaScript -->
+
+      <input type="text" id="busca-estoque" oninput="renderizarTelas()" placeholder="Buscar item..." class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-100 focus:outline-none focus:border-emerald-500">
+
+      <div id="lista-estoque" class="space-y-4"></div>
+    </section>
+
+    <!-- ABA 2: A COMPRAR -->
+    <section id="sec-comprar" class="space-y-4 hidden">
+      <h2 class="text-base font-semibold text-emerald-400 flex items-center gap-2">
+        <i data-lucide="list-checks" class="w-5 h-5"></i> Sugestão de Compras
+      </h2>
+      <p class="text-xs text-slate-400">Itens com estoque atual menor ou igual ao mínimo:</p>
+      <div id="lista-comprar" class="space-y-3"></div>
+    </section>
+
+    <!-- ABA 3: MERCADO -->
+    <section id="sec-mercado" class="space-y-4 hidden">
+      <div class="bg-slate-800 border border-slate-700 rounded-xl p-3 space-y-2">
+        <div class="flex justify-between text-xs">
+          <span class="text-slate-400">Obrigatórios: <strong id="total-obrigat" class="text-emerald-400">R$ 0,00</strong></span>
+          <span class="text-slate-400">Extras: <strong id="total-extra" class="text-amber-400">R$ 0,00</strong></span>
+        </div>
+        <div class="text-base font-bold text-center border-t border-slate-700 pt-2 text-slate-100">
+          Total da Compra: <span id="total-geral" class="text-emerald-400">R$ 0,00</span>
+        </div>
       </div>
-    </div>
+
+      <div id="lista-mercado" class="space-y-3"></div>
+
+      <button onclick="finalizarCompra()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm shadow-lg flex items-center justify-center gap-2">
+        <i data-lucide="check-circle-2" class="w-5 h-5"></i> Finalizar Compra e Atualizar Estoque
+      </button>
+    </section>
+
+    <!-- ABA 4: HISTÓRICO -->
+    <section id="sec-historico" class="space-y-4 hidden">
+      <h2 class="text-base font-semibold text-emerald-400 flex items-center gap-2">
+        <i data-lucide="history" class="w-5 h-5"></i> Histórico de Compras
+      </h2>
+      <div id="lista-historico" class="space-y-3"></div>
+    </section>
+
   </main>
 
-  <!-- Modal Identificação de Usuário -->
+  <!-- Modal Cadastro/Edição de Item -->
+  <div id="modal-item" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-800 border border-slate-700 w-full max-w-sm rounded-xl p-5 shadow-2xl space-y-3">
+      <h3 class="text-base font-bold text-slate-100" id="titulo-modal-item">Cadastrar Item</h3>
+      
+      <input type="hidden" id="edit-index">
+      
+      <div>
+        <label class="text-xs text-slate-400">Nome do Item</label>
+        <input type="text" id="inp-nome" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-slate-100">
+      </div>
+
+      <div>
+        <label class="text-xs text-slate-400">Categoria</label>
+        <select id="inp-cat" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-slate-100">
+          <option value="Mercearia e Grãos">Mercearia e Grãos</option>
+          <option value="Limpeza e Lavanderia">Limpeza e Lavanderia</option>
+          <option value="Higiene Pessoal">Higiene Pessoal</option>
+          <option value="Laticínios e Frios">Laticínios e Frios</option>
+          <option value="Carnes e Aves">Carnes e Aves</option>
+          <option value="Congelados">Congelados</option>
+          <option value="Descartáveis e Utensílios">Descartáveis e Utensílios</option>
+        </select>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="text-xs text-slate-400">Estoque Mínimo</label>
+          <input type="number" id="inp-min" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-slate-100" value="1">
+        </div>
+        <div>
+          <label class="text-xs text-slate-400">Estoque Atual</label>
+          <input type="number" id="inp-atual" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-slate-100" value="0">
+        </div>
+      </div>
+
+      <div>
+        <label class="text-xs text-slate-400">Unidade de Medida</label>
+        <select id="inp-und" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-slate-100">
+          <option value="un">un (unidade)</option>
+          <option value="kg">kg (quilo)</option>
+          <option value="L">L (litro)</option>
+          <option value="pacote">pacote</option>
+        </select>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="fecharModalItem()" class="px-3 py-1.5 bg-slate-700 text-slate-300 rounded-lg text-xs">Cancelar</button>
+        <button onclick="salvarItem()" class="px-4 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-semibold">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Identificação Usuário -->
   <div id="modal-usuario" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-slate-800 border border-slate-700 w-full max-w-xs rounded-xl p-5 shadow-2xl space-y-4">
       <h3 class="text-base font-bold text-slate-100">Quem está usando?</h3>
-      <p class="text-xs text-slate-400">Informe seu nome para salvar o controle de estoque.</p>
-      <input type="text" id="input-nome-usuario" placeholder="Seu nome (ex: Maria)" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-100 focus:outline-none focus:border-emerald-500">
-      <div class="flex justify-end gap-2 pt-2">
-        <button onclick="salvarUsuario()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold">Salvar Nome</button>
+      <input type="text" id="input-nome-usuario" placeholder="Seu nome" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-100">
+      <div class="flex justify-end gap-2">
+        <button onclick="salvarUsuario()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-semibold">Salvar</button>
       </div>
     </div>
   </div>
 
   <script>
-    // Lista padrão com os itens categorizados
-    const itensPadrao = [
-      { id: 1, nome: "Sabão em pó", categoria: "Limpeza e Lavanderia", estoqueAtual: 1, estoqueMinimo: 2, unidade: "pacote" },
-      { id: 2, nome: "Oleo", categoria: "Mercearia e Grãos", estoqueAtual: 2, estoqueMinimo: 3, unidade: "L" },
-      { id: 3, nome: "Sabonetes", categoria: "Higiene Pessoal", estoqueAtual: 4, estoqueMinimo: 5, unidade: "un" },
-      { id: 4, nome: "Suco", categoria: "Mercearia e Grãos", estoqueAtual: 2, estoqueMinimo: 4, unidade: "un" },
-      { id: 5, nome: "Maionese Tradicional", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 1, unidade: "un" },
-      { id: 6, nome: "Detergente", categoria: "Limpeza e Lavanderia", estoqueAtual: 3, estoqueMinimo: 4, unidade: "un" },
-      { id: 7, nome: "Arroz", categoria: "Mercearia e Grãos", estoqueAtual: 2, estoqueMinimo: 2, unidade: "kg" },
-      { id: 8, nome: "Feijão", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 3, unidade: "kg" },
-      { id: 9, nome: "Café", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 2, unidade: "pacote" },
-      { id: 10, nome: "Leite em pó", categoria: "Laticínios e Frios", estoqueAtual: 1, estoqueMinimo: 2, unidade: "pacote" }
+    // Lista completa dos 58 itens categorizados
+    const itensIniciais = [
+      { nome: "Sabão em pó", categoria: "Limpeza e Lavanderia", estoqueAtual: 1, estoqueMinimo: 2, unidade: "pacote", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Oleo", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 3, unidade: "L", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Sabonetes", categoria: "Higiene Pessoal", estoqueAtual: 3, estoqueMinimo: 5, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Suco", categoria: "Mercearia e Grãos", estoqueAtual: 2, estoqueMinimo: 4, unidade: "un", comprar: false, preco: 0, marca: "", pegou: "", tipo: "Extra" },
+      { nome: "Maionese Tradicional", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 1, unidade: "un", comprar: false, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Detergente", categoria: "Limpeza e Lavanderia", estoqueAtual: 2, estoqueMinimo: 4, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Papel alumínio", categoria: "Descartáveis e Utensílios", estoqueAtual: 0, estoqueMinimo: 1, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Extra" },
+      { nome: "Alcool", categoria: "Limpeza e Lavanderia", estoqueAtual: 1, estoqueMinimo: 2, unidade: "L", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Açúcar", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 2, unidade: "kg", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Feijão", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 3, unidade: "kg", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Arroz", categoria: "Mercearia e Grãos", estoqueAtual: 2, estoqueMinimo: 2, unidade: "kg", comprar: false, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Café", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 2, unidade: "pacote", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Alho", categoria: "Mercearia e Grãos", estoqueAtual: 0, estoqueMinimo: 1, unidade: "kg", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Leite em pó", categoria: "Laticínios e Frios", estoqueAtual: 1, estoqueMinimo: 2, unidade: "pacote", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Pão de Forma", categoria: "Mercearia e Grãos", estoqueAtual: 0, estoqueMinimo: 1, unidade: "pacote", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Macarrão Espaguete", categoria: "Mercearia e Grãos", estoqueAtual: 2, estoqueMinimo: 3, unidade: "pacote", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Ovos", categoria: "Laticínios e Frios", estoqueAtual: 6, estoqueMinimo: 12, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Creme de leite", categoria: "Laticínios e Frios", estoqueAtual: 1, estoqueMinimo: 3, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Macarrão - Penne ou Parafuso", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 2, unidade: "pacote", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Queijo ralado", categoria: "Laticínios e Frios", estoqueAtual: 0, estoqueMinimo: 2, unidade: "pacote", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Extra" },
+      { nome: "Requeijão", categoria: "Laticínios e Frios", estoqueAtual: 0, estoqueMinimo: 1, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Farinha de Trigo", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 1, unidade: "kg", comprar: false, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Pasta de Dente - Casa", categoria: "Higiene Pessoal", estoqueAtual: 1, estoqueMinimo: 2, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Pasta de Dente - Bolsa", categoria: "Higiene Pessoal", estoqueAtual: 0, estoqueMinimo: 1, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Escova de Dente", categoria: "Higiene Pessoal", estoqueAtual: 1, estoqueMinimo: 2, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Sardinha em lata", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 2, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Extra" },
+      { nome: "Amaciante 5 litros", categoria: "Limpeza e Lavanderia", estoqueAtual: 0, estoqueMinimo: 1, unidade: "L", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Amaciante Concentrado", categoria: "Limpeza e Lavanderia", estoqueAtual: 0, estoqueMinimo: 1, unidade: "un", comprar: false, preco: 0, marca: "", pegou: "", tipo: "Extra" },
+      { nome: "Queijo Fatiado", categoria: "Laticínios e Frios", estoqueAtual: 0, estoqueMinimo: 1, unidade: "kg", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Presunto Fatiado", categoria: "Laticínios e Frios", estoqueAtual: 0, estoqueMinimo: 1, unidade: "kg", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Hambúrguer Tradicional", categoria: "Congelados", estoqueAtual: 0, estoqueMinimo: 1, unidade: "pacote", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Extra" },
+      { nome: "Leite condensado", categoria: "Laticínios e Frios", estoqueAtual: 1, estoqueMinimo: 2, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Extra" },
+      { nome: "Ketchup", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 1, unidade: "un", comprar: false, preco: 0, marca: "", pegou: "", tipo: "Extra" },
+      { nome: "Margarina Tradicional", categoria: "Laticínios e Frios", estoqueAtual: 1, estoqueMinimo: 1, unidade: "un", comprar: false, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Margarina Alho", categoria: "Laticínios e Frios", estoqueAtual: 0, estoqueMinimo: 1, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Extra" },
+      { nome: "Hambúrguer 180g", categoria: "Congelados", estoqueAtual: 0, estoqueMinimo: 1, unidade: "pacote", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Extra" },
+      { nome: "Batata Palito congelada", categoria: "Congelados", estoqueAtual: 0, estoqueMinimo: 1, unidade: "pacote", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Extra" },
+      { nome: "Coxa", categoria: "Carnes e Aves", estoqueAtual: 0, estoqueMinimo: 2, unidade: "kg", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Sobrecoxa", categoria: "Carnes e Aves", estoqueAtual: 0, estoqueMinimo: 2, unidade: "kg", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Moida Suina", categoria: "Carnes e Aves", estoqueAtual: 0, estoqueMinimo: 1, unidade: "kg", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "File de Frango / Sassami", categoria: "Carnes e Aves", estoqueAtual: 1, estoqueMinimo: 2, unidade: "kg", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Limpa Aluminio", categoria: "Limpeza e Lavanderia", estoqueAtual: 1, estoqueMinimo: 1, unidade: "un", comprar: false, preco: 0, marca: "", pegou: "", tipo: "Extra" },
+      { nome: "Sapólio", categoria: "Limpeza e Lavanderia", estoqueAtual: 0, estoqueMinimo: 1, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Extra" },
+      { nome: "Flocão de milho", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 2, unidade: "pacote", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Milho em conserva", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 2, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Extra" },
+      { nome: "Perfex", categoria: "Limpeza e Lavanderia", estoqueAtual: 1, estoqueMinimo: 2, unidade: "pacote", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Vinagre de alcool", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 1, unidade: "L", comprar: false, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Sal Marinho", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 1, unidade: "kg", comprar: false, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Papel Manteiga", categoria: "Descartáveis e Utensílios", estoqueAtual: 0, estoqueMinimo: 1, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Extra" },
+      { nome: "Film PVC", categoria: "Descartáveis e Utensílios", estoqueAtual: 0, estoqueMinimo: 1, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Extra" },
+      { nome: "Papel Toalha", categoria: "Descartáveis e Utensílios", estoqueAtual: 1, estoqueMinimo: 2, unidade: "pacote", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Fermento dr Oetker", categoria: "Mercearia e Grãos", estoqueAtual: 0, estoqueMinimo: 1, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Extra" },
+      { nome: "Farinha de Mandioca", categoria: "Mercearia e Grãos", estoqueAtual: 1, estoqueMinimo: 1, unidade: "kg", comprar: false, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Sabonete Thiago", categoria: "Higiene Pessoal", estoqueAtual: 1, estoqueMinimo: 2, unidade: "un", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Papel Higiênico", categoria: "Higiene Pessoal", estoqueAtual: 2, estoqueMinimo: 4, unidade: "pacote", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Palha de Aço", categoria: "Limpeza e Lavanderia", estoqueAtual: 1, estoqueMinimo: 2, unidade: "pacote", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Esponja", categoria: "Limpeza e Lavanderia", estoqueAtual: 2, estoqueMinimo: 3, unidade: "pacote", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" },
+      { nome: "Lava Roupas Líquido 5L", categoria: "Limpeza e Lavanderia", estoqueAtual: 0, estoqueMinimo: 1, unidade: "L", comprar: true, preco: 0, marca: "", pegou: "", tipo: "Obrigatório" }
     ];
 
     let usuarioAtual = localStorage.getItem('usuario_compras') || '';
-    let meusItens = JSON.parse(localStorage.getItem('itens_estoque')) || itensPadrao;
+    let meusItens = JSON.parse(localStorage.getItem('itens_estoque_full')) || itensIniciais;
+    let historicoCompras = JSON.parse(localStorage.getItem('historico_compras')) || [];
 
     window.onload = function() {
       if (!usuarioAtual) {
@@ -89,85 +246,215 @@
       } else {
         document.getElementById('lbl-usuario').innerText = usuarioAtual;
       }
-      renderizarEstoque();
+      renderizarTelas();
     };
 
-    function renderizarEstoque() {
-      const container = document.getElementById('lista-estoque');
-      container.innerHTML = '';
-
-      meusItens.forEach((item, index) => {
-        const precisaComprar = item.estoqueAtual <= item.estoqueMinimo;
-        
-        const card = document.createElement('div');
-        card.className = `p-3 rounded-lg border flex items-center justify-between transition ${
-          precisaComprar 
-            ? 'bg-amber-950/30 border-amber-800/50' 
-            : 'bg-slate-900 border-slate-700/80'
-        }`;
-
-        card.innerHTML = `
-          <div class="flex-1 pr-2">
-            <div class="flex items-center gap-2">
-              <span class="font-medium text-sm text-slate-100">${item.nome}</span>
-              ${precisaComprar ? '<span class="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded font-semibold">Repor</span>' : ''}
-            </div>
-            <div class="text-xs text-slate-400 mt-0.5">
-              <span>Mínimo: ${item.estoqueMinimo} ${item.unidade}</span> • 
-              <span class="text-slate-500">${item.categoria}</span>
-            </div>
-          </div>
-
-          <!-- Controle Rápido de Estoque -->
-          <div class="flex items-center bg-slate-800 border border-slate-700 rounded-lg p-1 space-x-1">
-            <button onclick="alterarEstoque(${index}, -1)" class="w-7 h-7 bg-slate-700 hover:bg-slate-600 rounded text-slate-200 font-bold flex items-center justify-center transition active:scale-95 text-base">
-              -
-            </button>
-            
-            <div class="px-2 text-center min-w-[2.5rem]">
-              <span class="font-bold text-sm text-emerald-400">${item.estoqueAtual}</span>
-              <span class="text-[10px] text-slate-400 block -mt-1">${item.unidade}</span>
-            </div>
-
-            <button onclick="alterarEstoque(${index}, 1)" class="w-7 h-7 bg-slate-700 hover:bg-slate-600 rounded text-slate-200 font-bold flex items-center justify-center transition active:scale-95 text-base">
-              +
-            </button>
-          </div>
-        `;
-
-        container.appendChild(card);
-      });
-
+    function renderizarTelas() {
+      renderizarEstoque();
+      renderizarComprar();
+      renderizarMercado();
+      renderizarHistorico();
       lucide.createIcons();
     }
 
-    // Função para alterar o estoque diretamente da tela principal
+    // 1. ABA ESTOQUE (COM BOTÕES RÁPIDOS + / -)
+    function renderizarEstoque() {
+      const container = document.getElementById('lista-estoque');
+      const busca = document.getElementById('busca-estoque').value.toLowerCase();
+      container.innerHTML = '';
+
+      const grupos = {};
+      meusItens.forEach((item, index) => {
+        if (busca && !item.nome.toLowerCase().includes(busca)) return;
+        if (!grupos[item.categoria]) grupos[item.categoria] = [];
+        grupos[item.categoria].push({ ...item, origIndex: index });
+      });
+
+      for (const [cat, lista] of Object.entries(grupos)) {
+        const sec = document.createElement('div');
+        sec.className = 'bg-slate-800 border border-slate-700/80 rounded-xl overflow-hidden';
+        
+        let htmlItens = '';
+        lista.forEach(item => {
+          const repor = item.estoqueAtual <= item.estoqueMinimo;
+          htmlItens += `
+            <div class="p-3 border-b border-slate-700/50 last:border-b-0 flex items-center justify-between">
+              <div class="flex-1 pr-2">
+                <div class="flex items-center gap-1.5">
+                  <span class="font-medium text-sm text-slate-100">${item.nome}</span>
+                  ${repor ? '<span class="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-1 py-0.5 rounded">Repor</span>' : ''}
+                </div>
+                <div class="text-xs text-slate-400">Mín: ${item.estoqueMinimo} ${item.unidade}</div>
+              </div>
+
+              <!-- Ajuste Rápido de Estoque -->
+              <div class="flex items-center bg-slate-900 border border-slate-700 rounded-lg p-1 space-x-1">
+                <button onclick="alterarEstoque(${item.origIndex}, -1)" class="w-7 h-7 bg-slate-800 hover:bg-slate-700 rounded text-slate-200 font-bold flex items-center justify-center">-</button>
+                <div class="px-2 text-center min-w-[2.2rem]">
+                  <span class="font-bold text-sm text-emerald-400">${item.estoqueAtual}</span>
+                </div>
+                <button onclick="alterarEstoque(${item.origIndex}, 1)" class="w-7 h-7 bg-slate-800 hover:bg-slate-700 rounded text-slate-200 font-bold flex items-center justify-center">+</button>
+              </div>
+
+              <button onclick="abrirModalItem(${item.origIndex})" class="ml-2 text-slate-500 hover:text-slate-300 p-1">
+                <i data-lucide="edit-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          `;
+        });
+
+        sec.innerHTML = `
+          <div class="bg-slate-700/40 p-2.5 px-3 text-xs font-bold text-slate-300 flex justify-between">
+            <span>${cat}</span>
+            <span class="text-slate-400 font-normal">(${lista.length})</span>
+          </div>
+          <div>${htmlItens}</div>
+        `;
+        container.appendChild(sec);
+      }
+    }
+
     function alterarEstoque(index, delta) {
       if (meusItens[index].estoqueAtual + delta >= 0) {
         meusItens[index].estoqueAtual += delta;
+        if (meusItens[index].estoqueAtual <= meusItens[index].estoqueMinimo) {
+          meusItens[index].comprar = true;
+        }
         salvarDados();
-        renderizarEstoque();
+        renderizarTelas();
       }
     }
 
-    function salvarDados() {
-      localStorage.setItem('itens_estoque', JSON.stringify(meusItens));
+    // 2. ABA A COMPRAR
+    function renderizarComprar() {
+      const container = document.getElementById('lista-comprar');
+      container.innerHTML = '';
+
+      meusItens.forEach((item, index) => {
+        const precisa = item.estoqueAtual <= item.estoqueMinimo;
+        const card = document.createElement('div');
+        card.className = 'bg-slate-800 border border-slate-700/80 p-3 rounded-lg flex items-center justify-between';
+        
+        card.innerHTML = `
+          <div>
+            <span class="font-medium text-sm text-slate-100">${item.nome}</span>
+            <div class="text-xs text-slate-400">Sugestão: comprar ${(item.estoqueMinimo - item.estoqueAtual) > 0 ? (item.estoqueMinimo - item.estoqueAtual) : 1} ${item.unidade}</div>
+          </div>
+          <label class="flex items-center gap-2 text-xs font-medium text-slate-300 cursor-pointer">
+            <span>Comprar?</span>
+            <input type="checkbox" ${item.comprar ? 'checked' : ''} onchange="toggleComprar(${index})" class="w-5 h-5 accent-emerald-500 rounded">
+          </label>
+        `;
+        container.appendChild(card);
+      });
     }
 
-    function abrirModalUsuario() {
-      document.getElementById('input-nome-usuario').value = usuarioAtual;
-      document.getElementById('modal-usuario').classList.remove('hidden');
+    function toggleComprar(index) {
+      meusItens[index].comprar = !meusItens[index].comprar;
+      salvarDados();
+      renderizarTelas();
     }
 
-    function salvarUsuario() {
-      const nome = document.getElementById('input-nome-usuario').value.trim();
-      if (nome) {
-        usuarioAtual = nome;
-        localStorage.setItem('usuario_compras', nome);
-        document.getElementById('lbl-usuario').innerText = nome;
-        document.getElementById('modal-usuario').classList.add('hidden');
-      }
+    // 3. ABA MERCADO
+    function renderizarMercado() {
+      const container = document.getElementById('lista-mercado');
+      container.innerHTML = '';
+
+      let totalObr = 0;
+      let totalExt = 0;
+
+      meusItens.forEach((item, index) => {
+        if (!item.comprar) return;
+
+        const totalItem = (item.preco || 0) * 1;
+        if (item.tipo === 'Obrigatório') totalObr += totalItem;
+        else totalExt += totalItem;
+
+        const card = document.createElement('div');
+        card.className = 'bg-slate-800 border border-slate-700/80 p-3 rounded-xl space-y-2';
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-sm text-slate-100">${item.nome}</span>
+            <button onclick="marcarEuPego(${index})" class="text-[10px] px-2 py-0.5 rounded-full border ${item.pegou ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-slate-700 text-slate-400 border-slate-600'}">
+              ${item.pegou ? 'Pego por: ' + item.pegou : 'Eu Pego!'}
+            </button>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <div>
+              <label class="text-slate-400">Preço Un (R$)</label>
+              <input type="number" step="0.01" value="${item.preco || ''}" onchange="atualizarPreco(${index}, this.value)" placeholder="0,00" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-slate-100">
+            </div>
+            <div>
+              <label class="text-slate-400">Marca (Opcional)</label>
+              <input type="text" value="${item.marca || ''}" onchange="atualizarMarca(${index}, this.value)" placeholder="Ex: Nestlé" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-slate-100">
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center text-xs pt-1 border-t border-slate-700/50">
+            <button onclick="toggleTipo(${index})" class="text-[11px] font-semibold ${item.tipo === 'Obrigatório' ? 'text-emerald-400' : 'text-amber-400'}">
+              ${item.tipo} (Clique p/ mudar)
+            </button>
+            <span class="font-bold text-slate-200">Total: R$ ${totalItem.toFixed(2)}</span>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      document.getElementById('total-obrigat').innerText = `R$ ${totalObr.toFixed(2)}`;
+      document.getElementById('total-extra').innerText = `R$ ${totalExt.toFixed(2)}`;
+      document.getElementById('total-geral').innerText = `R$ ${(totalObr + totalExt).toFixed(2)}`;
     }
-  </script>
-</body>
-</html>
+
+    function atualizarPreco(index, val) {
+      meusItens[index].preco = parseFloat(val) || 0;
+      salvarDados();
+      renderizarMercado();
+    }
+
+    function atualizarMarca(index, val) {
+      meusItens[index].marca = val;
+      salvarDados();
+    }
+
+    function toggleTipo(index) {
+      meusItens[index].tipo = meusItens[index].tipo === 'Obrigatório' ? 'Extra' : 'Obrigatório';
+      salvarDados();
+      renderizarMercado();
+    }
+
+    function marcarEuPego(index) {
+      meusItens[index].pegou = meusItens[index].pegou ? '' : (usuarioAtual || 'Alguém');
+      salvarDados();
+      renderizarMercado();
+    }
+
+    function finalizarCompra() {
+      const itensComprados = meusItens.filter(i => i.comprar);
+      if (itensComprados.length === 0) return alert("Nenhum item selecionado para compra.");
+
+      const registro = {
+        data: new Date().toLocaleDateString('pt-BR'),
+        comprador: usuarioAtual || 'Anônimo',
+        total: document.getElementById('total-geral').innerText,
+        itens: itensComprados.map(i => `${i.nome} (${i.marca || 'S/M'}) - R$ ${i.preco}`)
+      };
+
+      historicoCompras.unshift(registro);
+
+      // Atualiza o estoque somando o que foi comprado
+      meusItens.forEach(item => {
+        if (item.comprar) {
+          item.estoqueAtual += 1;
+          item.comprar = false;
+        }
+      });
+
+      localStorage.setItem('historico_compras', JSON.stringify(historicoCompras));
+      salvarDados();
+      alert("Compra finalizada! Estoque atualizado.");
+      mudarAba('historico');
+    }
+
+    // 4
